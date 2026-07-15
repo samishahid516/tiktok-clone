@@ -1,0 +1,37 @@
+<div class="flex flex-col items-center gap-3 px-3">
+    {% if next_post_id or prev_post_id %}
+    {% if prev_post_id %}
+    <a href="{% url 'post_detail' prev_post_id %}" class="w-11 h-11 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 flex items-center justify-center transition-colors shadow-sm hover:bg-neutral-100 dark:hover:bg-neutral-700">
+        <svg class="w-5 h-5 text-neutral-600 dark:text-neutral-400" fill="currentColor" viewBox="0 0 48 48"><path d="m24 20.24 13.17 13.17a1 1 0 0 0 1.42 0l2.82-2.82a1 1 0 0 0 0-1.42L25.06 12.82a1.5 1.5 0 0 0-2.12 0L6.59 29.17a1 1 0 0 0 0 1.42L9.4 33.4a1 1 0 0 0 1.42 0L24 20.24Z"/></svg>
+    </a>
+    {% else %}
+    <div class="w-11 h-11 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 flex items-center justify-center opacity-30" style="cursor:not-allowed">
+        <svg class="w-5 h-5 text-neutral-600 dark:text-neutral-400" fill="currentColor" viewBox="0 0 48 48"><path d="m24 20.24 13.17 13.17a1 1 0 0 0 1.42 0l2.82-2.82a1 1 0 0 0 0-1.42L25.06 12.82a1.5 1.5 0 0 0-2.12 0L6.59 29.17a1 1 0 0 0 0 1.42L9.4 33.4a1 1 0 0 0 1.42 0L24 20.24Z"/></svg>
+    </div>
+    {% endif %}
+    <div class="flex flex-col items-center gap-1">
+        <div class="w-2 h-2 rounded-full bg-neutral-600 dark:bg-neutral-300"></div>
+    </div>
+    {% if next_post_id %}
+    <a href="{% url 'post_detail' next_post_id %}" class="w-11 h-11 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 flex items-center justify-center transition-colors shadow-sm hover:bg-neutral-100 dark:hover:bg-neutral-700">
+        <svg class="w-5 h-5 text-neutral-600 dark:text-neutral-400" fill="currentColor" viewBox="0 0 48 48"><path d="m24 27.76 13.17-13.17a1 1 0 0 1 1.42 0l2.82 2.82a1 1 0 0 1 0 1.42L25.06 35.18a1.5 1.5 0 0 1-2.12 0L6.59 18.83a1 1 0 0 1 0-1.42L9.4 14.6a1 1 0 0 1 1.42 0L24 27.76Z"/></svg>
+    </a>
+    {% else %}
+    <div class="w-11 h-11 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 flex items-center justify-center opacity-30" style="cursor:not-allowed">
+        <svg class="w-5 h-5 text-neutral-600 dark:text-neutral-400" fill="currentColor" viewBox="0 0 48 48"><path d="m24 27.76 13.17-13.17a1 1 0 0 1 1.42 0l2.82 2.82a1 1 0 0 1 0 1.42L25.06 35.18a1.5 1.5 0 0 1-2.12 0L6.59 18.83a1 1 0 0 1 0-1.42L9.4 14.6a1 1 0 0 1 1.42 0L24 27.76Z"/></svg>
+    </div>
+    {% endif %}
+    {% else %}
+    <button @click="currentIndex > 0 ? currentIndex-- : null" :class="currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer'" class="w-11 h-11 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 flex items-center justify-center transition-colors shadow-sm">
+        <svg class="w-5 h-5 text-neutral-600 dark:text-neutral-400" fill="currentColor" viewBox="0 0 48 48"><path d="m24 20.24 13.17 13.17a1 1 0 0 0 1.42 0l2.82-2.82a1 1 0 0 0 0-1.42L25.06 12.82a1.5 1.5 0 0 0-2.12 0L6.59 29.17a1 1 0 0 0 0 1.42L9.4 33.4a1 1 0 0 0 1.42 0L24 20.24Z"/></svg>
+    </button>
+    <div class="flex flex-col items-center gap-1">
+        <template x-for="(_, i) in videos">
+            <div @click="currentIndex = i" :class="i === currentIndex ? 'w-2 h-2 bg-neutral-600 dark:bg-neutral-300' : 'w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-600'" class="rounded-full transition-all cursor-pointer"></div>
+        </template>
+    </div>
+    <button @click="currentIndex < videos.length - 1 ? currentIndex++ : null" :class="currentIndex === videos.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer'" class="w-11 h-11 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 flex items-center justify-center transition-colors shadow-sm">
+        <svg class="w-5 h-5 text-neutral-600 dark:text-neutral-400" fill="currentColor" viewBox="0 0 48 48"><path d="m24 27.76 13.17-13.17a1 1 0 0 1 1.42 0l2.82 2.82a1 1 0 0 1 0 1.42L25.06 35.18a1.5 1.5 0 0 1-2.12 0L6.59 18.83a1 1 0 0 1 0-1.42L9.4 14.6a1 1 0 0 1 1.42 0L24 27.76Z"/></svg>
+    </button>
+    {% endif %}
+</div>

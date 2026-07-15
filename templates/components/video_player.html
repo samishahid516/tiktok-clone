@@ -1,0 +1,12 @@
+<div x-data="{ paused: false }" @click="const vid = $el.querySelector('video'); if (vid) { paused = !vid.paused; vid.paused ? vid.play() : vid.pause() }" class="absolute inset-0 cursor-pointer">
+    {% if alpine %}
+    <video :src="{{ alpine }}" class="absolute inset-0 w-full h-full object-cover rounded-2xl" autoplay loop muted playsinline></video>
+    {% else %}
+    <video src="{{ video_url }}" class="absolute inset-0 w-full h-full object-cover rounded-2xl" autoplay loop muted playsinline></video>
+    {% endif %}
+    <div class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none" x-show="paused" x-transition.opacity>
+        <div class="w-14 h-14 rounded-full bg-black/50 flex items-center justify-center">
+            <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5.14v14.72a1 1 0 0 0 1.5.86l11-7.36a1 1 0 0 0 0-1.72l-11-7.36A1 1 0 0 0 8 5.14Z"/></svg>
+        </div>
+    </div>
+</div>

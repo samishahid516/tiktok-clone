@@ -1,0 +1,281 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.user.username }} - Post - TikTok</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+    <link rel="stylesheet" href="{% static 'src/output.css' %}">
+    <script defer src="{% static 'src/alpine.min.js' %}"></script>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    </style>
+</head>
+<body>
+    <div x-data="{ showLikers: false, showComments: false, showEditModal: false, editCaption: '{{ post.caption|escapejs }}', editHashtags: '{{ post.hashtags|default:''|escapejs }}', editSoundtrack: '{% if post.soundtrack %}{{ post.soundtrack.title|escapejs }}{% endif %}', showDeleteModal: false, darkMode: localStorage.getItem('darkMode') === 'true', showMorePanel: false, showThemeOptions: false, isAuthenticated: {{ user.is_authenticated|lower }}, liked: {% if user in post.likes.all %}true{% else %}false{% endif %}, totalLikes: {{ post.like_set.count }}, bookmarked: {% if user.is_authenticated %}{% if user in post.bookmarks.all %}true{% else %}false{% endif %}{% else %}false{% endif %}, replyTo: null, replyText: '', showReplyInput: false, commentText: '', scrollCooldown: false, toggleLike() { if (!this.isAuthenticated) return; fetch('/post/{{ post.id }}/like/', { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } }).then(r => r.json()).then(d => { this.liked = d.liked; this.totalLikes = d.total_likes }) }, toggleBookmark() { if (!this.isAuthenticated) return; fetch('/post/{{ post.id }}/bookmark/', { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } }).then(r => r.json()).then(d => { this.bookmarked = d.bookmarked }) }, setReply(id) { this.replyTo = id; this.replyText = ''; this.showReplyInput = true }, submitReply() { var self = this; if (!this.replyText.trim()) return; var body = 'text=' + encodeURIComponent(this.replyText); if (this.replyTo) body += '&parent_id=' + this.replyTo; fetch('/post/{{ post.id }}/comment/', { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded' }, body: body }).then(function(r) { return r.json() }).then(function(d) { if (d.success) { var initial = d.username.charAt(0).toUpperCase(); if (self.replyTo) { var html = '<div class="flex gap-2"><div class="w-6 h-6 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-[10px] font-bold shrink-0 dark:text-white">' + initial + '</div><div class="flex-1 min-w-0"><p class="text-xs font-semibold dark:text-white">' + d.username + '</p><p class="text-sm dark:text-neutral-300">' + d.text + '</p><p class="text-[10px] text-neutral-400 mt-0.5">Just now</p><button @click="deleteComment(' + d.id + ')" class="hover:text-red-500 transition-colors mt-0.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg></button></div></div>'; var container = document.querySelector('[data-replies="' + self.replyTo + '"]'); if (container) { container.insertAdjacentHTML('beforeend', html); if (typeof Alpine !== 'undefined') Alpine.initTree(container.lastElementChild) } } else { var html = '<div><div class="flex gap-2"><div class="w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-bold shrink-0 dark:text-white">' + initial + '</div><div class="flex-1 min-w-0"><p class="text-xs font-semibold dark:text-white">' + d.username + '</p><p class="text-sm dark:text-neutral-300">' + d.text + '</p><div class="flex items-center gap-3 mt-1 text-xs text-neutral-400"><span>Just now</span><button @click="setReply(' + d.id + ')" class="hover:text-rose-500 transition-colors">Reply</button><button @click="deleteComment(' + d.id + ')" class="hover:text-red-500 transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg></button></div><div data-replies="' + d.id + '" class="mt-2 ml-2 pl-3 border-l-2 border-neutral-200 dark:border-neutral-700 space-y-2"></div><div x-show="showReplyInput && replyTo === ' + d.id + '" class="mt-2 flex gap-2"><input x-model="replyText" @keydown.enter="submitReply()" type="text" placeholder="Write a reply..." class="flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-full px-3 py-1.5 text-xs focus:outline-none dark:text-white dark:placeholder-neutral-400"><button @click="submitReply()" class="text-xs text-rose-500 font-semibold hover:text-rose-600 transition-colors">Post</button></div></div></div></div>'; var list = document.querySelector('[data-comments-list]'); if (list) { list.insertAdjacentHTML('afterbegin', html); if (typeof Alpine !== 'undefined') Alpine.initTree(list.firstElementChild) } } self.replyText = ''; self.showReplyInput = false; self.replyTo = null } }) }, deleteComment(id) { var self = this; if (!confirm('Delete this comment?')) return; fetch('/post/comment/' + id + '/delete/', { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } }).then(function(r) { return r.json() }).then(function(d) { if (d.success) location.reload() }) }, menuItems: [
+        { id: 'for-you', label: 'For You', auth: false, icon: 'M24.9505 7.84001C24.3975 7.38666 23.6014 7.38666 23.0485 7.84003L6.94846 21.04C6.45839 21.4418 6.2737 22.1083 6.48706 22.705C6.70041 23.3017 7.26576 23.7 7.89949 23.7H10.2311L11.4232 36.7278C11.5409 38.0149 12.6203 39 13.9128 39H21.5C22.0523 39 22.5 38.5523 22.5 38V28.3153C22.5 27.763 22.9477 27.3153 23.5 27.3153H24.5C25.0523 27.3153 25.5 27.763 25.5 28.3153V38C25.5 38.5523 25.9477 39 26.5 39H34.0874C35.3798 39 36.4592 38.0149 36.577 36.7278L37.7691 23.7H40.1001C40.7338 23.7 41.2992 23.3017 41.5125 22.705C41.7259 22.1082 41.5412 21.4418 41.0511 21.04L24.9505 7.84001Z' },
+        { id: 'explore', label: 'Explore', auth: false, icon: 'M24 37.4a13.4 13.4 0 1 0 0-26.8 13.4 13.4 0 0 0 0 26.8ZM40.5 24a16.5 16.5 0 1 1-33 0 16.5 16.5 0 0 1 33 0ZM27.13 27.18 19 32.1a.6.6 0 0 1-.9-.63l1.84-9.33a2 2 0 0 1 .92-1.32L29 15.9a.6.6 0 0 1 .9.63l-1.84 9.33a2 2 0 0 1-.93 1.32Zm-5.04-.45 3.11-1.89.7-3.57-3.1 1.89-.7 3.57Z' },
+        { id: 'following', label: 'Following', auth: false, icon: 'M18.99 3a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 4a6 6 0 1 0 0 12A6 6 0 0 0 19 7ZM18.99 26c2.96 0 5.6.58 7.87 1.65l-3.07 3.06a15.38 15.38 0 0 0-4.8-.71C10.9 30 6.3 35.16 6 43c-.02.55-.46 1-1.02 1h-2c-.55 0-1-.45-.98-1C2.33 32.99 8.7 26 19 26ZM35.7 41.88 31.82 38H45a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H31.82l3.88-3.88a1 1 0 0 0 0-1.41l-1.41-1.42a1 1 0 0 0-1.42 0l-7.3 7.3a2 2 0 0 0 0 2.82l7.3 7.3a1 1 0 0 0 1.42 0l1.41-1.42a1 1 0 0 0 0-1.41Z' },
+        { id: 'friends', label: 'Friends', auth: true, icon: 'M34 21a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm-4 4c-4.42 0-8 3.58-8 8v4h24v-4c0-4.42-3.58-8-8-8h-8ZM14 21a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-2 4c-3.31 0-6 2.69-6 6v3h12v-3c0-3.31-2.69-6-6-6h0Z' },
+        { id: 'messages', label: 'Messages', auth: true, icon: 'M24 4C12.95 4 4 11.63 4 21c0 3.76 1.43 7.2 3.83 10.07L4 44l13.73-4.58A22.2 22.2 0 0 0 24 40c11.05 0 20-7.63 20-17S35.05 4 24 4Z' },
+        { id: 'activity', label: 'Activity', auth: true, icon: 'M44 24c0 11.05-8.95 20-20 20S4 35.05 4 24 12.95 4 24 4s20 8.95 20 20Zm-18-8a2 2 0 1 0-4 0v10a2 2 0 0 0 1.05 1.77l8 4.44a2 2 0 1 0 1.9-3.52L26 24.7V16Z' },
+        { id: 'upload', label: 'Upload', auth: false, icon: 'M25 15a1 1 0 0 1 1 1v6h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-6v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-6h-6a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h6v-6a1 1 0 0 1 1-1h2ZM33.58 4.5H14.42c-1.33 0-2.45 0-3.37.07-.95.08-1.86.25-2.73.7a7 7 0 0 0-3.06 3.05 7.14 7.14 0 0 0-.69 2.73 44.6 44.6 0 0 0-.07 3.37v19.16c0 1.33 0 2.45.07 3.37.08.95.25 1.86.7 2.73a7 7 0 0 0 3.05 3.06c.87.44 1.78.6 2.73.69.92.07 2.04.07 3.37.07h19.16c1.33 0 2.45 0 3.37-.07a7.14 7.14 0 0 0 2.73-.7 7 7 0 0 0 3.06-3.05c.44-.87.6-1.78.69-2.73.07-.92.07-2.04.07-3.37V14.42c0-1.33 0-2.45-.07-3.37a7.14 7.14 0 0 0-.7-2.73 7 7 0 0 0-3.05-3.06 7.14 7.14 0 0 0-2.73-.69 44.6 44.6 0 0 0-3.37-.07ZM10.14 8.83c.2-.1.53-.21 1.24-.27.73-.06 1.69-.06 3.12-.06h19c1.43 0 2.39 0 3.12.06a3.3 3.3 0 0 1 1.24.27 3 3 0 0 1 1.31 1.3c.1.21.21.54.27 1.25.06.73.06 1.69.06 3.12v19c0 1.43 0 2.39-.06 3.12a3.3 3.3 0 0 1-.27 1.24 3 3 0 0 1-1.3 1.31c-.21.1-.54.21-1.25.27-.73.06-1.69.06-3.12.06h-19c-1.43 0-2.39 0-3.12-.06a3.3 3.3 0 0 1-1.24-.27 3 3 0 0 1-1.31-1.3c-.1-.21-.21-.54-.27-1.25-.06-.73-.06-1.69-.06-3.12v-19c0-1.43 0-2.39.06-3.12a3.3 3.3 0 0 1 .27-1.24 3 3 0 0 1 1.3-1.31Z' },
+        { id: 'live', label: 'LIVE', auth: false, icon: 'M9 8a4 4 0 0 0-4 4v24a4 4 0 0 0 4 4h30a4 4 0 0 0 4-4V12a4 4 0 0 0-4-4H9ZM18 16.5a.5.5 0 0 1 .75-.43l14 9a.5.5 0 0 1 0 .86l-14 9a.5.5 0 0 1-.75-.43v-18Z' },
+        { id: 'profile', label: 'Profile', auth: false, icon: 'M24.0003 7C20.1343 7 17.0003 10.134 17.0003 14C17.0003 17.866 20.1343 21 24.0003 21C27.8663 21 31.0003 17.866 31.0003 14C31.0003 10.134 27.8663 7 24.0003 7ZM13.0003 14C13.0003 7.92487 17.9252 3 24.0003 3C30.0755 3 35.0003 7.92487 35.0003 14C35.0003 20.0751 30.0755 25 24.0003 25C17.9252 25 13.0003 20.0751 13.0003 14ZM24.0003 33C18.0615 33 13.0493 36.9841 11.4972 42.4262C11.3457 42.9573 10.8217 43.3088 10.2804 43.1989L8.32038 42.8011C7.77914 42.6912 7.4266 42.1618 7.5683 41.628C9.49821 34.358 16.1215 29 24.0003 29C31.8792 29 38.5025 34.358 40.4324 41.628C40.5741 42.1618 40.2215 42.6912 39.6803 42.8011L37.7203 43.1989C37.179 43.3088 36.6549 42.9573 36.5035 42.4262C34.9514 36.9841 29.9391 33 24.0003 33Z' },
+        { id: 'more', label: 'More', auth: false, icon: 'M5 24a4 4 0 1 1 8 0 4 4 0 0 1-8 0Zm15 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0Zm15 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z' },
+    ], get visibleItems() { return this.menuItems.filter(i => !i.auth || this.isAuthenticated) }, init() { if (this.darkMode) document.documentElement.classList.add('dark') }, toggleTheme(targetDark) { this.darkMode = targetDark; document.documentElement.classList.toggle('dark', targetDark); localStorage.setItem('darkMode', targetDark) } }" class="flex h-screen bg-white dark:bg-black">
+        <aside :class="showMorePanel ? 'w-[72px]' : 'md:w-[72px] lg:w-[280px]'" class="max-md:hidden md:flex shrink-0 bg-white dark:bg-black flex-col h-screen overflow-y-auto hide-scrollbar border-r border-neutral-300 dark:border-neutral-700 transition-all duration-300">
+            <div class="flex flex-col h-full p-0">
+                <a href="{% url 'index' %}" :class="showMorePanel ? 'mb-2 pt-3 md:flex md:justify-center' : 'mb-2 pt-3 md:flex md:justify-center lg:block lg:px-3'">
+                    <img src="{% static 'tiktok.png' %}" class="h-8" :class="showMorePanel ? 'hidden' : 'hidden lg:block'">
+                    <svg :class="showMorePanel ? 'block' : 'block lg:hidden'" class="w-6 h-6 text-black dark:text-white" fill="currentColor" viewBox="0 0 48 48"><path d="M38.077 15.854c-2.007-.06-3.826-1.02-5.198-2.307a9.534 9.534 0 0 1-1.737-2.532A8.06 8.06 0 0 1 30.562 8h-5.589v20.83a5.49 5.49 0 0 1-4.696 5.589 5.467 5.467 0 0 1-3.515-.73 5.604 5.604 0 0 1-1.951-2.148 5.688 5.688 0 0 1-.777-2.865 5.643 5.643 0 0 1 .367-1.822 5.556 5.556 0 0 1 1.046-1.822 5.469 5.469 0 0 1 1.56-1.21 5.406 5.406 0 0 1 1.83-.612 5.578 5.578 0 0 1 1.519-.052v-5.692a10.626 10.626 0 0 0-3.11.161 10.755 10.755 0 0 0-5.71 2.574 10.947 10.947 0 0 0-2.373 3.446 11.085 11.085 0 0 0-.844 4.226 11.14 11.14 0 0 0 .416 2.91 10.98 10.98 0 0 0 2.815 4.745 10.76 10.76 0 0 0 4.264 2.547 10.65 10.65 0 0 0 5.256.197 10.698 10.698 0 0 0 3.94-1.586 10.895 10.895 0 0 0 2.613-2.382A10.77 10.77 0 0 0 30.562 29.7V18.832a10.792 10.792 0 0 0 7.515 2.255v-5.233Z"/></svg>
+                </a>
+                <div :class="showMorePanel ? 'relative mb-2 md:flex md:justify-center md:px-0' : 'relative mb-2 md:px-0 lg:px-3 md:flex md:justify-center lg:block'">
+                    <input type="search" placeholder="Search" :class="showMorePanel ? 'hidden' : 'hidden lg:block'" class="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-full py-1.5 pl-3 pr-8 text-sm focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-400 dark:text-white dark:placeholder-neutral-400">
+                    <svg :class="showMorePanel ? 'block' : 'block lg:hidden'" class="w-5 h-5 text-neutral-400 dark:text-neutral-300" fill="currentColor" viewBox="0 0 48 48"><path d="M21.83 7.5a14.34 14.34 0 1 1 0 28.68 14.34 14.34 0 0 1 0-28.68Zm0-4a18.33 18.33 0 1 0 11.48 32.64l8.9 8.9a1 1 0 0 0 1.42 0l1.4-1.41a1 1 0 0 0 0-1.42l-8.89-8.9A18.34 18.34 0 0 0 21.83 3.5Z"/></svg>
+                    <svg :class="showMorePanel ? 'hidden' : 'hidden lg:block'" class="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 48 48"><path d="M21.83 7.5a14.34 14.34 0 1 1 0 28.68 14.34 14.34 0 0 1 0-28.68Zm0-4a18.33 18.33 0 1 0 11.48 32.64l8.9 8.9a1 1 0 0 0 1.42 0l1.4-1.41a1 1 0 0 0 0-1.42l-8.89-8.9A18.34 18.34 0 0 0 21.83 3.5Z"/></svg>
+                </div>
+                <nav class="flex flex-col gap-0 px-3">
+                    <template x-for="item in visibleItems">
+                        <button @click="item.id === 'more' ? (showMorePanel = !showMorePanel, showThemeOptions = false) : (showMorePanel = false, showThemeOptions = false,                         item.id === 'profile' && !isAuthenticated ? showLoginModal = true : null,                         item.id === 'profile' && isAuthenticated ? window.location.href='{% url "profile" %}' : null,                         item.id === 'upload' && !isAuthenticated ? showLoginModal = true : null,                         item.id === 'upload' && isAuthenticated ? window.location.href='{% url "upload" %}' : null, item.id === 'following' ? window.location.href='{% url "following" %}' : item.id !== 'more' && item.id !== 'upload' && item.id !== 'profile' ? window.location.href='{% url "home" %}' : null)" :class="[showMorePanel ? 'justify-center gap-0' : 'md:justify-center lg:justify-start md:gap-0 lg:gap-3', activeNav === item.id ? 'text-rose-500 bg-rose-50 font-semibold' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800 text-black dark:text-white']" class="flex items-center px-3 py-2.5 rounded-full text-base transition-colors w-full">
+                            <svg class="w-5 h-5 shrink-0" :class="activeNav === item.id ? 'text-rose-500' : 'text-black dark:text-white'" fill="currentColor" viewBox="0 0 48 48"><path :d="item.icon"></svg>
+                            <span x-text="item.label" :class="showMorePanel ? 'hidden' : 'hidden lg:inline'"></span>
+                        </button>
+                    </template>
+                </nav>
+                <div :class="showMorePanel ? 'hidden' : 'hidden lg:block'" class="mt-auto pt-3 border-t border-neutral-200 dark:border-neutral-700 px-3">
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center gap-2 mb-3 px-1">
+                            <div class="w-8 h-8 rounded-full bg-neutral-300 flex items-center justify-center shrink-0 overflow-hidden">
+                                {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <span class="text-sm font-semibold">{{ user.username|first|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="text-sm font-medium dark:text-white truncate">{{ user.username }}</span>
+                        </div>
+                    {% else %}
+                        <button class="w-full bg-rose-500 text-white font-semibold text-sm py-2 rounded-full hover:bg-rose-600 transition-colors mb-3">Log in</button>
+                    {% endif %}
+                    <div class="flex flex-col gap-1 text-sm text-neutral-400 font-semibold">
+                        <a href="" class="hover:underline block w-fit">Company</a>
+                        <a href="" class="hover:underline block w-fit">Program</a>
+                        <a href="" class="hover:underline block w-fit">Terms &amp; Policies</a>
+                    </div>
+                    <p class="text-sm text-neutral-400 mt-1 font-semibold">&copy; 2026 TikTok</p>
+                </div>
+            </div>
+        </aside>
+
+        <main @wheel.prevent="if (!scrollCooldown) { scrollCooldown = true; setTimeout(() => scrollCooldown = false, 1000); {% if next_post_id %}if (event.deltaY > 0) window.location.href='{% url "post_detail" next_post_id %}';{% endif %}{% if prev_post_id %}if (event.deltaY < 0) window.location.href='{% url "post_detail" prev_post_id %}';{% endif %} }" class="flex-1 flex items-center justify-center bg-white dark:bg-black overflow-hidden">
+            <div class="flex items-center gap-2 h-full py-6">
+                <div class="h-full flex items-center">
+                    <div class="aspect-[9/16] h-full max-h-[calc(100vh-80px)] min-w-[320px] bg-neutral-950 rounded-2xl overflow-hidden relative group">
+                        {% if post.video %}
+                            <video src="{{ post.video.file.url }}" controls class="absolute inset-0 w-full h-full object-cover rounded-2xl" autoplay loop muted playsinline onmouseenter="this.play()" onmouseleave="this.pause()"></video>
+                        {% elif post.image %}
+                            <img src="{{ post.image.file.url }}" class="absolute inset-0 w-full h-full object-cover rounded-2xl">
+                        {% endif %}
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none"></div>
+                        <div class="absolute bottom-4 left-4 right-4 z-10">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-neutral-600 overflow-hidden shrink-0 flex items-center justify-center text-white text-xs font-bold">{{ post.user.username|first|upper }}</div>
+                                <div>
+                                    <p class="text-white text-sm font-semibold">@{{ post.user.username }}</p>
+                                    <p class="text-white/80 text-xs">{{ post.caption }}{% if post.hashtags %} <span class="text-rose-500">{{ post.hashtags }}</span>{% endif %}</p>
+                                    {% if post.soundtrack %}
+                                    <div class="flex items-center gap-1 mt-0.5">
+                                        <svg class="w-3 h-3 text-white/80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z"/></svg>
+                                        <span class="text-white/80 text-xs">{{ post.soundtrack.title }}{% if post.soundtrack.artist %} — {{ post.soundtrack.artist }}{% endif %}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center gap-2 pb-2">
+                    <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 overflow-hidden shadow-sm flex items-center justify-center text-black dark:text-white text-xs font-bold">
+                        <span>{{ post.user.username|first|upper }}</span>
+                    </div>
+                    <button @click="toggleLike()" class="flex flex-col items-center gap-0.5 group">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 transition-all duration-500" :class="liked ? 'text-red-500 fill-red-500' : 'text-black dark:text-white'" fill="currentColor" viewBox="0 0 48 48"><path d="M40.96 24.15c1.83-4.8 1.05-8.61-.8-11.33a10.87 10.87 0 0 0-6.34-4.49 9.43 9.43 0 0 0-6.83 1.17c-1.08.65-2.1 1.53-2.99 2.66-.9-1.13-1.9-2.01-3-2.66a9.43 9.43 0 0 0-6.82-1.17 10.87 10.87 0 0 0-6.34 4.49c-1.85 2.72-2.63 6.54-.8 11.33 1.43 3.74 4.5 7.23 7.6 9.98a46.31 46.31 0 0 0 8.6 6.12l.76.4.76-.4a46.31 46.31 0 0 0 8.6-6.12c3.1-2.75 6.17-6.24 7.6-9.98ZM24 17.58c2.3-2.88 4.7-6.2 9.03-5.33a6.95 6.95 0 0 1 3.82 2.81c1.07 1.58 1.76 4.02.37 7.66-1.09 2.86-3.6 5.82-6.51 8.43A44.84 44.84 0 0 1 24 36.09a44.84 44.84 0 0 1-6.7-4.94c-2.93-2.6-5.43-5.57-6.52-8.43-1.4-3.64-.7-6.08.37-7.66a6.95 6.95 0 0 1 3.82-2.8c4.33-.88 6.73 2.44 9.03 5.32Z"/></svg>
+                        </div>
+                        <span class="text-neutral-600 dark:text-neutral-400 text-[10px]" x-text="totalLikes"></span>
+                    </button>
+                    <button @click="showLikers = !showLikers" class="flex flex-col items-center gap-0.5">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 text-black dark:text-white" fill="currentColor" viewBox="0 0 48 48"><path d="M24 44c11.05 0 20-8.95 20-20S35.05 4 24 4 4 12.95 4 24s8.95 20 20 20Zm6.58-25.16c1.24-1.24 1.63-3.12.9-4.73a4.33 4.33 0 0 0-2.84-2.4 4.42 4.42 0 0 0-3.43.45c-.58.35-1.12.81-1.6 1.36a4.35 4.35 0 0 0-1.61-1.36 4.42 4.42 0 0 0-3.43-.45 4.33 4.33 0 0 0-2.84 2.4c-.73 1.6-.34 3.49.9 4.73L24 29.75l6.58-10.9Z"/></svg>
+                        </div>
+                        <span class="text-neutral-600 dark:text-neutral-400 text-[10px]" x-text="totalLikes"></span>
+                    </button>
+                    <button @click="showComments = !showComments" class="flex flex-col items-center gap-0.5">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 text-black dark:text-white" fill="currentColor" viewBox="0 0 48 48"><path d="M28 34h-4c-7.68 0-12.04-1.83-14.48-4.07C7.14 27.74 6 24.58 6 20.5 6 13.85 13.16 7 24 7s18 6.85 18 13.5c0 4.46-1.93 8.49-5.3 12.23a45.03 45.03 0 0 1-8.7 7.23V34Zm0 10.7c9.52-5.82 18-13.66 18-24.2C46 10.84 36.15 3 24 3S2 10.84 2 20.5 7.5 38 24 38v7.32a.99.99 0 0 0 1.47.86A93.58 93.58 0 0 0 28 44.7Z"/></svg>
+                        </div>
+                        <span class="text-neutral-600 dark:text-neutral-400 text-[10px]">{{ post.comment_set.count }}</span>
+                    </button>
+                    <button @click="toggleBookmark()" class="flex flex-col items-center gap-0.5">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 transition-all duration-500" :class="bookmarked ? 'text-yellow-500 fill-yellow-500' : 'text-black dark:text-white'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4.5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v15.13a1 1 0 0 1-1.555.831l-6.167-4.12a.5.5 0 0 0-.556 0l-6.167 4.12A1 1 0 0 1 4 19.63z"/></svg>
+                        </div>
+                    </button>
+                    {% if user == post.user %}
+                    <button @click="showEditModal = true" class="flex flex-col items-center gap-0.5">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 text-black dark:text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
+                        </div>
+                        <span class="text-neutral-600 dark:text-neutral-400 text-[10px]">Edit</span>
+                    </button>
+                    <button @click="showDeleteModal = true" class="flex flex-col items-center gap-0.5">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 text-black dark:text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                        </div>
+                        <span class="text-neutral-600 dark:text-neutral-400 text-[10px]">Delete</span>
+                    </button>
+                    {% endif %}
+                    <button class="flex flex-col items-center gap-0.5">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 text-black dark:text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M10.938 3.175a.674.674 0 0 1 1.138-.488l6.526 6.215c.574.547.554 1.47-.043 1.991l-6.505 5.676a.674.674 0 0 1-1.116-.508V13.49s-6.985-1.258-9.225 2.854c-.209.384-1.023.518-.857-1.395.692-3.52 2.106-9.017 10.082-9.017z"/></svg>
+                        </div>
+                    </button>
+
+                </div>
+            </div>
+        </main>
+
+        <div class="max-[519px]:hidden min-[520px]:flex items-center justify-center h-screen bg-white dark:bg-black transition-colors">
+            {% include "components/navigation_dots.html" %}
+        </div>
+
+        <div x-show="showComments" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-x-8" x-transition:enter-end="opacity-100 translate-x-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-x-0" x-transition:leave-end="opacity-0 translate-x-8" class="fixed right-0 top-0 h-full w-[380px] max-w-full z-40 bg-white dark:bg-neutral-900 shadow-2xl border-l border-neutral-200 dark:border-neutral-700 flex flex-col">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+                <h2 class="font-semibold dark:text-white text-base">{{ post.comment_set.count }} Comments</h2>
+                <button @click="showComments = false" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors dark:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto hide-scrollbar px-4 py-3 space-y-4" data-comments-list>
+                {% for comment in post.comment_set.all %}
+                {% if not comment.parent %}
+                <div>
+                    <div class="flex gap-2">
+                        <div class="w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-bold shrink-0 dark:text-white">{{ comment.user.username|first|upper }}</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold dark:text-white">{{ comment.user.username }}</p>
+                            <p class="text-sm dark:text-neutral-300">{{ comment.text }}</p>
+                            <div class="flex items-center gap-3 mt-1 text-xs text-neutral-400">
+                                <span>{{ comment.created_at|date:"M d, Y" }}</span>
+                                {% if user.is_authenticated %}
+                                <button @click="setReply({{ comment.id }})" class="hover:text-rose-500 transition-colors">Reply</button>
+                                {% endif %}
+                                {% if user == comment.user %}
+                                <button @click="deleteComment({{ comment.id }})" class="hover:text-red-500 transition-colors">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                            {% with replies=comment.replies.all %}
+                            {% if replies %}
+                            <div data-replies="{{ comment.id }}" class="mt-2 ml-2 pl-3 border-l-2 border-neutral-200 dark:border-neutral-700 space-y-2">
+                                {% for reply in replies %}
+                                <div class="flex gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-[10px] font-bold shrink-0 dark:text-white">{{ reply.user.username|first|upper }}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-semibold dark:text-white">{{ reply.user.username }}</p>
+                                        <p class="text-sm dark:text-neutral-300">{{ reply.text }}</p>
+                                        <p class="text-[10px] text-neutral-400 mt-0.5">{{ reply.created_at|date:"M d, Y" }}</p>
+                                        {% if user == reply.user %}
+                                        <button @click="deleteComment({{ reply.id }})" class="hover:text-red-500 transition-colors mt-0.5">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% endwith %}
+                            <div x-show="showReplyInput && replyTo === {{ comment.id }}" class="mt-2 flex gap-2">
+                                <input x-model="replyText" @keydown.enter="submitReply()" type="text" placeholder="Write a reply..." class="flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-full px-3 py-1.5 text-xs focus:outline-none dark:text-white dark:placeholder-neutral-400">
+                                <button @click="submitReply()" class="text-xs text-rose-500 font-semibold hover:text-rose-600 transition-colors">Post</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% empty %}
+                <div class="text-center py-10 text-neutral-400 dark:text-neutral-500">
+                    <p class="text-sm font-semibold">No comments yet</p>
+                    <p class="text-xs mt-1">Be the first to comment.</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="border-t border-neutral-200 dark:border-neutral-700 p-3 flex gap-2">
+                <input x-model="commentText" @keydown.enter="if (!commentText.trim()) return; fetch('/post/{{ post.id }}/comment/', { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'text=' + encodeURIComponent(commentText) }).then(r => r.json()).then(d => { if (d.success) { var initial = d.username.charAt(0).toUpperCase(); var html = '<div><div class=\"flex gap-2\"><div class=\"w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-bold shrink-0 dark:text-white\">' + initial + '</div><div class=\"flex-1 min-w-0\"><p class=\"text-xs font-semibold dark:text-white\">' + d.username + '</p><p class=\"text-sm dark:text-neutral-300\">' + d.text + '</p><div class=\"flex items-center gap-3 mt-1 text-xs text-neutral-400\"><span>Just now</span><button @click=\"setReply(' + d.id + ')\" class=\"hover:text-rose-500 transition-colors\">Reply</button><button @click=\"deleteComment(' + d.id + ')\" class=\"hover:text-red-500 transition-colors\"><svg class=\"w-3.5 h-3.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0\"/></svg></button></div><div data-replies=\"' + d.id + '\" class=\"mt-2 ml-2 pl-3 border-l-2 border-neutral-200 dark:border-neutral-700 space-y-2\"></div><div x-show=\"showReplyInput && replyTo === ' + d.id + '\" class=\"mt-2 flex gap-2\"><input x-model=\"replyText\" @keydown.enter=\"submitReply()\" type=\"text\" placeholder=\"Write a reply...\" class=\"flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-full px-3 py-1.5 text-xs focus:outline-none dark:text-white dark:placeholder-neutral-400\"><button @click=\"submitReply()\" class=\"text-xs text-rose-500 font-semibold hover:text-rose-600 transition-colors\">Post</button></div></div></div></div>'; var list = document.querySelector('[data-comments-list]'); if (list) { list.insertAdjacentHTML('afterbegin', html); if (typeof Alpine !== 'undefined') Alpine.initTree(list.firstElementChild) } commentText = '' } })" type="text" placeholder="Add a comment..." class="flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-full px-3 py-2 text-sm focus:outline-none dark:text-white dark:placeholder-neutral-400">
+                <button @click="if (!commentText.trim()) return; fetch('/post/{{ post.id }}/comment/', { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'text=' + encodeURIComponent(commentText) }).then(r => r.json()).then(d => { if (d.success) { var initial = d.username.charAt(0).toUpperCase(); var html = '<div><div class=\"flex gap-2\"><div class=\"w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-bold shrink-0 dark:text-white\">' + initial + '</div><div class=\"flex-1 min-w-0\"><p class=\"text-xs font-semibold dark:text-white\">' + d.username + '</p><p class=\"text-sm dark:text-neutral-300\">' + d.text + '</p><div class=\"flex items-center gap-3 mt-1 text-xs text-neutral-400\"><span>Just now</span><button @click=\"setReply(' + d.id + ')\" class=\"hover:text-rose-500 transition-colors\">Reply</button><button @click=\"deleteComment(' + d.id + ')\" class=\"hover:text-red-500 transition-colors\"><svg class=\"w-3.5 h-3.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0\"/></svg></button></div><div data-replies=\"' + d.id + '\" class=\"mt-2 ml-2 pl-3 border-l-2 border-neutral-200 dark:border-neutral-700 space-y-2\"></div><div x-show=\"showReplyInput && replyTo === ' + d.id + '\" class=\"mt-2 flex gap-2\"><input x-model=\"replyText\" @keydown.enter=\"submitReply()\" type=\"text\" placeholder=\"Write a reply...\" class=\"flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-full px-3 py-1.5 text-xs focus:outline-none dark:text-white dark:placeholder-neutral-400\"><button @click=\"submitReply()\" class=\"text-xs text-rose-500 font-semibold hover:text-rose-600 transition-colors\">Post</button></div></div></div></div>'; var list = document.querySelector('[data-comments-list]'); if (list) { list.insertAdjacentHTML('afterbegin', html); if (typeof Alpine !== 'undefined') Alpine.initTree(list.firstElementChild) } commentText = '' } })" class="bg-rose-500 text-white text-xs font-semibold px-4 py-2 rounded-full hover:bg-rose-600 transition-colors">Post</button>
+            </div>
+        </div>
+        <div x-show="showComments" class="fixed inset-0 bg-black/30 z-30"></div>
+
+        <div x-show="showLikers" x-transition class="fixed right-0 top-0 h-full w-[380px] max-w-full z-40 bg-white dark:bg-neutral-900 shadow-2xl border-l border-neutral-200 dark:border-neutral-700 flex flex-col" @click.away="showLikers = false">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+                <h2 class="font-semibold dark:text-white text-base">Likes</h2>
+                <button @click="showLikers = false" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors dark:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto hide-scrollbar px-4 py-3 space-y-2">
+                {% for like in likers %}
+                <div class="flex items-center gap-3 px-2 py-2">
+                    <div class="w-9 h-9 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-sm font-bold shrink-0 dark:text-white">{{ like.user.username|first|upper }}</div>
+                    <span class="text-sm dark:text-white font-medium">{{ like.user.username }}</span>
+                </div>
+                {% empty %}
+                <div class="text-center py-10 text-neutral-400 dark:text-neutral-500">
+                    <p class="text-sm font-semibold">No likes yet</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div x-show="showLikers" class="fixed inset-0 bg-black/30 z-30" @click="showLikers = false"></div>
+
+        <div x-cloak x-show="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" @click.self="showEditModal = false">
+            <div class="bg-white dark:bg-neutral-800 rounded-2xl p-6 w-full max-w-lg mx-4 shadow-2xl">
+                <h3 class="text-lg font-semibold dark:text-white mb-4">Edit post</h3>
+                <form method="POST" action="{% url 'update_post' post.id %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <textarea name="caption" x-model="editCaption" class="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-xl p-3 text-sm dark:text-white focus:outline-none focus:border-rose-500 resize-none" rows="3" maxlength="150" placeholder="Caption..."></textarea>
+                    <p class="text-xs text-neutral-400 mt-1 mb-3" x-text="editCaption.length + '/150'"></p>
+                    <input name="soundtrack" x-model="editSoundtrack" type="text" class="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-xl p-3 text-sm dark:text-white focus:outline-none focus:border-rose-500 mb-3" placeholder="Soundtrack name...">
+                    <input name="hashtags" x-model="editHashtags" type="text" class="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-xl p-3 text-sm dark:text-white focus:outline-none focus:border-rose-500" placeholder="Hashtags (e.g. #romantic #couple)">
+                    <div class="flex gap-3 justify-end mt-4">
+                        <button type="button" @click="showEditModal = false" class="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-700 rounded-xl hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors">Cancel</button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-rose-500 rounded-xl hover:bg-rose-600 transition-colors">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div x-cloak x-show="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" @click.self="showDeleteModal = false">
+            <div class="bg-white dark:bg-neutral-800 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+                <h3 class="text-lg font-semibold dark:text-white mb-2">Delete post?</h3>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-6">This can't be undone and it will be removed from your profile.</p>
+                <form method="POST" action="{% url 'delete_post' post.id %}">
+                    {% csrf_token %}
+                    <div class="flex gap-3 justify-end">
+                        <button type="button" @click="showDeleteModal = false" class="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-700 rounded-xl hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors">Cancel</button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

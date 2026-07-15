@@ -1,0 +1,263 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video - TikTok</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+    <link rel="stylesheet" href="{% static 'src/output.css' %}">
+    <script defer src="{% static 'src/alpine.min.js' %}"></script>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    </style>
+</head>
+<body>
+    <script>var SOUNDTRACKS = {{ sound_tracks_json|safe }};</script>
+    <div x-data="{ activeNav: 'upload', showMorePanel: false, showThemeOptions: false, darkMode: localStorage.getItem('darkMode') === 'true', isAuthenticated: {{ user.is_authenticated|lower }}, menuItems: [
+        { id: 'for-you', label: 'For You', auth: false, icon: 'M24.9505 7.84001C24.3975 7.38666 23.6014 7.38666 23.0485 7.84003L6.94846 21.04C6.45839 21.4418 6.2737 22.1083 6.48706 22.705C6.70041 23.3017 7.26576 23.7 7.89949 23.7H10.2311L11.4232 36.7278C11.5409 38.0149 12.6203 39 13.9128 39H21.5C22.0523 39 22.5 38.5523 22.5 38V28.3153C22.5 27.763 22.9477 27.3153 23.5 27.3153H24.5C25.0523 27.3153 25.5 27.763 25.5 28.3153V38C25.5 38.5523 25.9477 39 26.5 39H34.0874C35.3798 39 36.4592 38.0149 36.577 36.7278L37.7691 23.7H40.1001C40.7338 23.7 41.2992 23.3017 41.5125 22.705C41.7259 22.1082 41.5412 21.4418 41.0511 21.04L24.9505 7.84001Z' },
+        { id: 'explore', label: 'Explore', auth: false, icon: 'M24 37.4a13.4 13.4 0 1 0 0-26.8 13.4 13.4 0 0 0 0 26.8ZM40.5 24a16.5 16.5 0 1 1-33 0 16.5 16.5 0 0 1 33 0ZM27.13 27.18 19 32.1a.6.6 0 0 1-.9-.63l1.84-9.33a2 2 0 0 1 .92-1.32L29 15.9a.6.6 0 0 1 .9.63l-1.84 9.33a2 2 0 0 1-.93 1.32Zm-5.04-.45 3.11-1.89.7-3.57-3.1 1.89-.7 3.57Z' },
+        { id: 'following', label: 'Following', auth: false, icon: 'M18.99 3a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 4a6 6 0 1 0 0 12A6 6 0 0 0 19 7ZM18.99 26c2.96 0 5.6.58 7.87 1.65l-3.07 3.06a15.38 15.38 0 0 0-4.8-.71C10.9 30 6.3 35.16 6 43c-.02.55-.46 1-1.02 1h-2c-.55 0-1-.45-.98-1C2.33 32.99 8.7 26 19 26ZM35.7 41.88 31.82 38H45a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H31.82l3.88-3.88a1 1 0 0 0 0-1.41l-1.41-1.42a1 1 0 0 0-1.42 0l-7.3 7.3a2 2 0 0 0 0 2.82l7.3 7.3a1 1 0 0 0 1.42 0l1.41-1.42a1 1 0 0 0 0-1.41Z' },
+        { id: 'friends', label: 'Friends', auth: true, icon: 'M34 21a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm-4 4c-4.42 0-8 3.58-8 8v4h24v-4c0-4.42-3.58-8-8-8h-8ZM14 21a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-2 4c-3.31 0-6 2.69-6 6v3h12v-3c0-3.31-2.69-6-6-6h0Z' },
+        { id: 'messages', label: 'Messages', auth: true, icon: 'M24 4C12.95 4 4 11.63 4 21c0 3.76 1.43 7.2 3.83 10.07L4 44l13.73-4.58A22.2 22.2 0 0 0 24 40c11.05 0 20-7.63 20-17S35.05 4 24 4Z' },
+        { id: 'activity', label: 'Activity', auth: true, icon: 'M44 24c0 11.05-8.95 20-20 20S4 35.05 4 24 12.95 4 24 4s20 8.95 20 20Zm-18-8a2 2 0 1 0-4 0v10a2 2 0 0 0 1.05 1.77l8 4.44a2 2 0 1 0 1.9-3.52L26 24.7V16Z' },
+        { id: 'upload', label: 'Upload', auth: false, icon: 'M25 15a1 1 0 0 1 1 1v6h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-6v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-6h-6a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h6v-6a1 1 0 0 1 1-1h2ZM33.58 4.5H14.42c-1.33 0-2.45 0-3.37.07-.95.08-1.86.25-2.73.7a7 7 0 0 0-3.06 3.05 7.14 7.14 0 0 0-.69 2.73 44.6 44.6 0 0 0-.07 3.37v19.16c0 1.33 0 2.45.07 3.37.08.95.25 1.86.7 2.73a7 7 0 0 0 3.05 3.06c.87.44 1.78.6 2.73.69.92.07 2.04.07 3.37.07h19.16c1.33 0 2.45 0 3.37-.07a7.14 7.14 0 0 0 2.73-.7 7 7 0 0 0 3.06-3.05c.44-.87.6-1.78.69-2.73.07-.92.07-2.04.07-3.37V14.42c0-1.33 0-2.45-.07-3.37a7.14 7.14 0 0 0-.7-2.73 7 7 0 0 0-3.05-3.06 7.14 7.14 0 0 0-2.73-.69 44.6 44.6 0 0 0-3.37-.07ZM10.14 8.83c.2-.1.53-.21 1.24-.27.73-.06 1.69-.06 3.12-.06h19c1.43 0 2.39 0 3.12.06a3.3 3.3 0 0 1 1.24.27 3 3 0 0 1 1.31 1.3c.1.21.21.54.27 1.25.06.73.06 1.69.06 3.12v19c0 1.43 0 2.39-.06 3.12a3.3 3.3 0 0 1-.27 1.24 3 3 0 0 1-1.3 1.31c-.21.1-.54.21-1.25.27-.73.06-1.69.06-3.12.06h-19c-1.43 0-2.39 0-3.12-.06a3.3 3.3 0 0 1-1.24-.27 3 3 0 0 1-1.31-1.3c-.1-.21-.21-.54-.27-1.25-.06-.73-.06-1.69-.06-3.12v-19c0-1.43 0-2.39.06-3.12a3.3 3.3 0 0 1 .27-1.24 3 3 0 0 1 1.3-1.31Z' },
+        { id: 'live', label: 'LIVE', auth: false, icon: 'M9 8a4 4 0 0 0-4 4v24a4 4 0 0 0 4 4h30a4 4 0 0 0 4-4V12a4 4 0 0 0-4-4H9ZM18 16.5a.5.5 0 0 1 .75-.43l14 9a.5.5 0 0 1 0 .86l-14 9a.5.5 0 0 1-.75-.43v-18Z' },
+        { id: 'profile', label: 'Profile', auth: false, icon: 'M24.0003 7C20.1343 7 17.0003 10.134 17.0003 14C17.0003 17.866 20.1343 21 24.0003 21C27.8663 21 31.0003 17.866 31.0003 14C31.0003 10.134 27.8663 7 24.0003 7ZM13.0003 14C13.0003 7.92487 17.9252 3 24.0003 3C30.0755 3 35.0003 7.92487 35.0003 14C35.0003 20.0751 30.0755 25 24.0003 25C17.9252 25 13.0003 20.0751 13.0003 14ZM24.0003 33C18.0615 33 13.0493 36.9841 11.4972 42.4262C11.3457 42.9573 10.8217 43.3088 10.2804 43.1989L8.32038 42.8011C7.77914 42.6912 7.4266 42.1618 7.5683 41.628C9.49821 34.358 16.1215 29 24.0003 29C31.8792 29 38.5025 34.358 40.4324 41.628C40.5741 42.1618 40.2215 42.6912 39.6803 42.8011L37.7203 43.1989C37.179 43.3088 36.6549 42.9573 36.5035 42.4262C34.9514 36.9841 29.9391 33 24.0003 33Z' },
+        { id: 'more', label: 'More', auth: false, icon: 'M5 24a4 4 0 1 1 8 0 4 4 0 0 1-8 0Zm15 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0Zm15 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z' },
+    ], get visibleItems() { return this.menuItems.filter(i => !i.auth || this.isAuthenticated) }, init() { if (this.darkMode) document.documentElement.classList.add('dark') }, toggleTheme(targetDark) { this.darkMode = targetDark; document.documentElement.classList.toggle('dark', targetDark); localStorage.setItem('darkMode', targetDark) }, dragging: false, selectedFile: null, descCount: 0, showLocation: false, locationQuery: '', locations: ['The Pakistani', 'مسجد امام بارگاہ العباس', 'KARBALLA MEDAAN,ROHRI SUKKUR کربلامیدان روہڑی سکھر', 'جامع مسجد باب السلام', 'جامع مسجد تاجدارمدینہ؛ مدرستہ المدینہ', 'United King', 'Karachi Guest House (Guest House In Karachi) one of the Best Guest House in karachi.', 'Shrine Allama Khadim Hussain Rizvi', 'Jarogo Waterfall Swat Valley | Visit Malam Jabba, Kalam Valley, Kumrat Valley | Swat Travel Guide', 'Punjabi Dera پنجابی ڈیرہ'], filteredLocations() { return this.locations.filter(l => l.toLowerCase().includes(this.locationQuery.toLowerCase())) }, selectLocation(loc) { this.locationQuery = loc; this.showLocation = false }, highQuality: true, showSoundPanel: false, soundQuery: '', selectedSoundtrack: '', soundTracks: typeof SOUNDTRACKS !== 'undefined' ? SOUNDTRACKS : [], filteredSoundtracks() { return this.soundTracks.filter(function(s) { return s.toLowerCase().includes(this.soundQuery.toLowerCase()) }.bind(this)) }, selectSoundtrack(name) { this.selectedSoundtrack = name; this.soundQuery = name; this.showSoundPanel = false }, isVideoFile() { return this.selectedFile && this.selectedFile.type.startsWith('video/') }, isImageFile() { return this.selectedFile && this.selectedFile.type.startsWith('image/') } }" class="flex h-screen bg-white dark:bg-black">
+        <aside :class="showMorePanel ? 'w-[72px]' : 'md:w-[72px] lg:w-[280px]'" class="max-md:hidden md:flex shrink-0 bg-white dark:bg-black flex-col h-screen overflow-y-auto hide-scrollbar border-r border-neutral-300 dark:border-neutral-700 transition-all duration-300">
+            <div class="flex flex-col h-full p-0">
+                <a href="{% url 'index' %}" :class="showMorePanel ? 'mb-2 pt-3 md:flex md:justify-center' : 'mb-2 pt-3 md:flex md:justify-center lg:block lg:px-3'">
+                    <img src="{% static 'tiktok.png' %}" class="h-8" :class="showMorePanel ? 'hidden' : 'hidden lg:block'">
+                    <svg :class="showMorePanel ? 'block' : 'block lg:hidden'" class="w-6 h-6 text-black dark:text-white" fill="currentColor" viewBox="0 0 48 48"><path d="M38.077 15.854c-2.007-.06-3.826-1.02-5.198-2.307a9.534 9.534 0 0 1-1.737-2.532A8.06 8.06 0 0 1 30.562 8h-5.589v20.83a5.49 5.49 0 0 1-4.696 5.589 5.467 5.467 0 0 1-3.515-.73 5.604 5.604 0 0 1-1.951-2.148 5.688 5.688 0 0 1-.777-2.865 5.643 5.643 0 0 1 .367-1.822 5.556 5.556 0 0 1 1.046-1.822 5.469 5.469 0 0 1 1.56-1.21 5.406 5.406 0 0 1 1.83-.612 5.578 5.578 0 0 1 1.519-.052v-5.692a10.626 10.626 0 0 0-3.11.161 10.755 10.755 0 0 0-5.71 2.574 10.947 10.947 0 0 0-2.373 3.446 11.085 11.085 0 0 0-.844 4.226 11.14 11.14 0 0 0 .416 2.91 10.98 10.98 0 0 0 2.815 4.745 10.76 10.76 0 0 0 4.264 2.547 10.65 10.65 0 0 0 5.256.197 10.698 10.698 0 0 0 3.94-1.586 10.895 10.895 0 0 0 2.613-2.382A10.77 10.77 0 0 0 30.562 29.7V18.832a10.792 10.792 0 0 0 7.515 2.255v-5.233Z"/></svg>
+                </a>
+
+                <div :class="showMorePanel ? 'relative mb-2 md:flex md:justify-center md:px-0' : 'relative mb-2 md:px-0 lg:px-3 md:flex md:justify-center lg:block'">
+                    <input type="search" placeholder="Search" :class="showMorePanel ? 'hidden' : 'hidden lg:block'" class="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-full py-1.5 pl-3 pr-8 text-sm focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-400 dark:text-white dark:placeholder-neutral-400">
+                    <svg :class="showMorePanel ? 'block' : 'block lg:hidden'" class="w-5 h-5 text-neutral-400 dark:text-neutral-300" fill="currentColor" viewBox="0 0 48 48"><path d="M21.83 7.5a14.34 14.34 0 1 1 0 28.68 14.34 14.34 0 0 1 0-28.68Zm0-4a18.33 18.33 0 1 0 11.48 32.64l8.9 8.9a1 1 0 0 0 1.42 0l1.4-1.41a1 1 0 0 0 0-1.42l-8.89-8.9A18.34 18.34 0 0 0 21.83 3.5Z"/></svg>
+                    <svg :class="showMorePanel ? 'hidden' : 'hidden lg:block'" class="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 48 48"><path d="M21.83 7.5a14.34 14.34 0 1 1 0 28.68 14.34 14.34 0 0 1 0-28.68Zm0-4a18.33 18.33 0 1 0 11.48 32.64l8.9 8.9a1 1 0 0 0 1.42 0l1.4-1.41a1 1 0 0 0 0-1.42l-8.89-8.9A18.34 18.34 0 0 0 21.83 3.5Z"/></svg>
+                </div>
+
+                <nav class="flex flex-col gap-0 px-3">
+                    <template x-for="item in visibleItems">
+                        <button @click="item.id === 'more' ? (showMorePanel = !showMorePanel, showThemeOptions = false) : (showMorePanel = false, showThemeOptions = false,                         item.id === 'profile' && !isAuthenticated ? showLoginModal = true : null,                         item.id === 'profile' && isAuthenticated ? window.location.href='{% url "profile" %}' : null,                         item.id === 'upload' && !isAuthenticated ? showLoginModal = true : null,                         item.id === 'upload' && isAuthenticated ? window.location.href='{% url "upload" %}' : null,
+                        item.id === 'following' ? window.location.href='{% url "following" %}' : item.id !== 'more' && item.id !== 'upload' && item.id !== 'profile' ? window.location.href='{% url "home" %}' : null)" :class="[showMorePanel ? 'justify-center gap-0' : 'md:justify-center lg:justify-start md:gap-0 lg:gap-3', activeNav === item.id ? 'text-rose-500 bg-rose-50 font-semibold' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800 text-black dark:text-white']" class="flex items-center px-3 py-2.5 rounded-full text-base transition-colors w-full">
+                            <svg class="w-5 h-5 shrink-0" :class="activeNav === item.id ? 'text-rose-500' : 'text-black dark:text-white'" fill="currentColor" viewBox="0 0 48 48"><path :d="item.icon"></svg>
+                            <span x-text="item.label" :class="showMorePanel ? 'hidden' : 'hidden lg:inline'"></span>
+                        </button>
+                    </template>
+                </nav>
+
+                <div :class="showMorePanel ? 'hidden' : 'hidden lg:block'" class="mt-auto pt-3 border-t border-neutral-200 dark:border-neutral-700 px-3">
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center gap-2 mb-3 px-1">
+                            <div class="w-8 h-8 rounded-full bg-neutral-300 flex items-center justify-center shrink-0 overflow-hidden">
+                                {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <span class="text-sm font-semibold">{{ user.username|first|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="text-sm font-medium dark:text-white truncate">{{ user.username }}</span>
+                        </div>
+                    {% else %}
+                        <button @click="showLoginModal = true" class="w-full bg-rose-500 text-white font-semibold text-sm py-2 rounded-full hover:bg-rose-600 transition-colors mb-3">Log in</button>
+                    {% endif %}
+                    <div class="flex flex-col gap-1 text-sm text-neutral-400 font-semibold">
+                        <a href="" class="hover:underline block w-fit">Company</a>
+                        <a href="" class="hover:underline block w-fit">Program</a>
+                        <a href="" class="hover:underline block w-fit">Terms &amp; Policies</a>
+                    </div>
+                    <p class="text-sm text-neutral-400 mt-1 font-semibold">&copy; 2026 TikTok</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto bg-white dark:bg-black">
+            <div class="max-w-6xl mx-auto px-4 py-6">
+                <h1 class="text-2xl font-bold dark:text-white mb-6">Upload Post</h1>
+
+                <form method="POST" enctype="multipart/form-data" x-ref="uploadForm">
+                    {% csrf_token %}
+                    <input type="file" name="media" accept="video/*,image/*" class="hidden" x-ref="fileInput" @change="selectedFile = $event.target.files[0]">
+
+                    <div x-show="!selectedFile" class="mb-6">
+                        <div @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false" @drop.prevent="dragging = false; $refs.fileInput.files = $event.dataTransfer.files; selectedFile = $event.dataTransfer.files[0]" :class="dragging ? 'border-rose-500 bg-rose-50 dark:bg-rose-500/10' : 'border-neutral-300 dark:border-neutral-600'" class="border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer hover:border-rose-400 dark:hover:border-rose-400">
+                            <div class="max-w-xs mx-auto">
+                                <svg class="w-10 h-10 mx-auto mb-3 text-neutral-400 dark:text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                                <p class="text-base font-semibold dark:text-white mb-1">Upload Video or Image</p>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-3">or drag and drop</p>
+                                <button type="button" @click="$refs.fileInput.click()" class="inline-block px-5 py-2 bg-rose-500 text-white font-semibold text-xs rounded-full hover:bg-rose-600 transition-colors cursor-pointer">Select file</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="selectedFile" class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                        <div class="lg:col-span-3 space-y-5">
+                            <div class="flex items-center gap-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-4">
+                                <svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium dark:text-white truncate" x-text="selectedFile.name"></p>
+                                    <p class="text-xs text-neutral-500" x-text="(selectedFile.size / (1024*1024)).toFixed(2) + ' MB'"></p>
+                                </div>
+                                <button type="button" @click="$refs.fileInput.click()" class="flex items-center gap-1.5 text-sm font-semibold text-rose-500 cursor-pointer hover:text-rose-600 shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"/></svg>
+                                    Replace
+                                </button>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium dark:text-white mb-1">Description</label>
+                                <textarea name="caption" rows="4" class="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-400 dark:text-white dark:placeholder-neutral-400 resize-none" placeholder="Describe your video" @input="descCount = $event.target.value.length"></textarea>
+                                <p class="text-xs text-neutral-400 mt-1 text-right" x-text="descCount + '/4000'"></p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium dark:text-white mb-1">Hashtags</label>
+                                <input type="text" name="hashtags" class="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-400 dark:text-white dark:placeholder-neutral-400" placeholder="Add hashtags">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium dark:text-white mb-1">Mention</label>
+                                <input type="text" name="mention" class="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-400 dark:text-white dark:placeholder-neutral-400" placeholder="Mention people">
+                            </div>
+
+                            <div class="relative">
+                                <label class="block text-sm font-medium dark:text-white mb-1">Location</label>
+                                <input type="text" x-model="locationQuery" @focus="showLocation = true" @input="showLocation = true" name="location" class="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-400 dark:text-white dark:placeholder-neutral-400" placeholder="Search locations">
+                                <template x-if="showLocation && locationQuery.length > 0">
+                                    <div class="absolute z-10 mt-1 w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                        <template x-for="loc in filteredLocations()" :key="loc">
+                                            <button type="button" @click="selectLocation(loc)" class="w-full text-left px-4 py-2.5 text-sm dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors" x-text="loc"></button>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="border-t border-neutral-200 dark:border-neutral-700 pt-5 space-y-4">
+                                <h3 class="text-sm font-semibold dark:text-white">Settings</h3>
+
+                                <div>
+                                    <label class="block text-sm font-medium dark:text-white mb-1">When to post</label>
+                                    <select name="schedule" class="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-400 dark:text-white">
+                                        <option value="now">Post now</option>
+                                        <option value="later">Schedule for later</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium dark:text-white mb-1">Who can see this post</label>
+                                    <div class="flex items-center justify-between bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl px-4 py-3">
+                                        <span class="text-sm dark:text-white">Everyone</span>
+                                        <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium dark:text-white">High-quality uploads</p>
+                                        <p class="text-xs text-neutral-500">HD by default when you post from Web Studio</p>
+                                    </div>
+                                    <button type="button" @click="highQuality = !highQuality" :class="highQuality ? 'bg-rose-500' : 'bg-neutral-300 dark:bg-neutral-600'" class="relative w-9 h-4 rounded-full transition-colors">
+                                        <span :class="highQuality ? 'translate-x-[14px]' : 'translate-x-[-2px]'" class="absolute -top-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform border border-neutral-200"></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-3 pt-2">
+                                <button type="submit" class="px-8 py-2.5 bg-rose-500 text-white font-semibold text-sm rounded-full hover:bg-rose-600 transition-colors">Post</button>
+                                <button type="button" @click="selectedFile = null" class="px-8 py-2.5 bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white font-semibold text-sm rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">Discard</button>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-2">
+                            <div class="sticky top-6">
+                                <div class="aspect-[9/16] max-h-[500px] bg-black rounded-xl flex items-center justify-center overflow-hidden">
+                                    <template x-if="isVideoFile()">
+                                        <video class="w-full h-full object-contain" controls style="width:400px;height:400px">
+                                            <source :src="URL.createObjectURL(selectedFile)">
+                                        </video>
+                                    </template>
+                                    <template x-if="isImageFile()">
+                                        <img :src="URL.createObjectURL(selectedFile)" class="w-full h-full object-contain" style="width:400px;height:400px">
+                                    </template>
+                                </div>
+                                <div class="relative flex items-center justify-center gap-6 mt-4">
+                                    <button type="button" class="flex flex-col items-center gap-1 text-neutral-500 hover:text-rose-500 transition-colors">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
+                                        <span class="text-xs font-medium">Edit</span>
+                                    </button>
+                                    <button type="button" @click="showSoundPanel = !showSoundPanel" class="flex flex-col items-center gap-1 text-neutral-500 hover:text-rose-500 transition-colors">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z"/></svg>
+                                        <span class="text-xs font-medium">Sound</span>
+                                    </button>
+                                    <div x-show="showSoundPanel" class="absolute bottom-20 left-0 w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg p-3 z-10">
+                                        <input type="text" x-model="soundQuery" placeholder="Search soundtracks..." class="w-full bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm focus:outline-none dark:text-white dark:placeholder-neutral-400 mb-2">
+                                        <div class="max-h-40 overflow-y-auto space-y-1">
+                                            <button type="button" @click="selectSoundtrack('')" :class="selectedSoundtrack === '' ? 'bg-rose-50 text-rose-500' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'" class="w-full text-left px-3 py-2 rounded-lg text-sm dark:text-white transition-colors">No soundtrack</button>
+                                            <template x-for="st in filteredSoundtracks()" :key="st">
+                                                <button type="button" @click="selectSoundtrack(st)" :class="selectedSoundtrack === st ? 'bg-rose-50 text-rose-500' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'" class="w-full text-left px-3 py-2 rounded-lg text-sm dark:text-white transition-colors truncate" x-text="st.replace('.mp3','').replace('.wav','').replace('.ogg','').replace(/-/g,' ').replace(/\(.*?\)/g,'').trim()"></button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="soundtrack" :value="selectedSoundtrack">
+                                    <button type="button" class="flex flex-col items-center gap-1 text-neutral-500 hover:text-rose-500 transition-colors">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                                        <span class="text-xs font-medium">Text</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <template x-if="!selectedFile">
+                    <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="p-5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700">
+                            <h3 class="font-semibold dark:text-white mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.117-.01.235-.015.353-.015h11.294c.118 0 .236.005.353.015m-12 0c-.857.085-1.67.435-2.304.945A3.75 3.75 0 004.53 9.898l-1.138 4.28a1.5 1.5 0 00.243 1.297.75.75 0 00.621.338h15.488a.75.75 0 00.621-.338 1.5 1.5 0 00.243-1.297l-1.138-4.28a3.75 3.75 0 00-2.137-2.075c-.634-.51-1.447-.86-2.304-.945M6 6.878V12m0 0c0 .198.008.395.024.59m0 0a2.25 2.25 0 004.452 0m-4.452 0a2.25 2.25 0 014.404-.09M18 6.878V12"/></svg>
+                                Size & Duration
+                            </h3>
+                            <ul class="text-sm text-neutral-600 dark:text-neutral-400 space-y-1.5">
+                                <li><span class="font-medium dark:text-neutral-300">Maximum size:</span> 30 GB</li>
+                                <li><span class="font-medium dark:text-neutral-300">Video duration:</span> 60 minutes</li>
+                            </ul>
+                        </div>
+                        <div class="p-5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700">
+                            <h3 class="font-semibold dark:text-white mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
+                                File Formats
+                            </h3>
+                            <ul class="text-sm text-neutral-600 dark:text-neutral-400 space-y-1.5">
+                                <li><span class="font-medium dark:text-neutral-300">Recommended:</span> ".mp4"</li>
+                                <li><span class="font-medium dark:text-neutral-300">Other major formats</span> are supported</li>
+                            </ul>
+                        </div>
+                        <div class="p-5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700">
+                            <h3 class="font-semibold dark:text-white mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/></svg>
+                                Video Resolutions
+                            </h3>
+                            <ul class="text-sm text-neutral-600 dark:text-neutral-400 space-y-1.5">
+                                <li><span class="font-medium dark:text-neutral-300">High-resolution recommended:</span> 1080p, 1440p, 4K</li>
+                            </ul>
+                        </div>
+                        <div class="p-5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700">
+                            <h3 class="font-semibold dark:text-white mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125m17.25 3.75a1.125 1.125 0 001.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125M3.375 19.5h17.25M6.375 3h11.25a1.5 1.5 0 011.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H6.375a1.5 1.5 0 01-1.5-1.5V4.5a1.5 1.5 0 011.5-1.5z"/></svg>
+                                Aspect Ratios
+                            </h3>
+                            <ul class="text-sm text-neutral-600 dark:text-neutral-400 space-y-1.5">
+                                <li><span class="font-medium dark:text-neutral-300">Recommended:</span> 16:9 for landscape, 9:16 for vertical</li>
+                            </ul>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,349 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile_user.username }} - TikTok</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+    <link rel="stylesheet" href="{% static 'src/output.css' %}">
+    <script defer src="{% static 'src/alpine.min.js' %}"></script>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body>
+    <div x-data="{ activeNav: 'profile', showMorePanel: false, showThemeOptions: false, darkMode: localStorage.getItem('darkMode') === 'true', isAuthenticated: {{ user.is_authenticated|lower }}, csrfToken: '{{ csrf_token }}', followingCount: {{ following_count }}, followersCount: {{ followers_count }}, likesCount: {{ total_likes }}, menuItems: [
+        { id: 'for-you', label: 'For You', auth: false, icon: 'M24.9505 7.84001C24.3975 7.38666 23.6014 7.38666 23.0485 7.84003L6.94846 21.04C6.45839 21.4418 6.2737 22.1083 6.48706 22.705C6.70041 23.3017 7.26576 23.7 7.89949 23.7H10.2311L11.4232 36.7278C11.5409 38.0149 12.6203 39 13.9128 39H21.5C22.0523 39 22.5 38.5523 22.5 38V28.3153C22.5 27.763 22.9477 27.3153 23.5 27.3153H24.5C25.0523 27.3153 25.5 27.763 25.5 28.3153V38C25.5 38.5523 25.9477 39 26.5 39H34.0874C35.3798 39 36.4592 38.0149 36.577 36.7278L37.7691 23.7H40.1001C40.7338 23.7 41.2992 23.3017 41.5125 22.705C41.7259 22.1082 41.5412 21.4418 41.0511 21.04L24.9505 7.84001Z' },
+        { id: 'explore', label: 'Explore', auth: false, icon: 'M24 37.4a13.4 13.4 0 1 0 0-26.8 13.4 13.4 0 0 0 0 26.8ZM40.5 24a16.5 16.5 0 1 1-33 0 16.5 16.5 0 0 1 33 0ZM27.13 27.18 19 32.1a.6.6 0 0 1-.9-.63l1.84-9.33a2 2 0 0 1 .92-1.32L29 15.9a.6.6 0 0 1 .9.63l-1.84 9.33a2 2 0 0 1-.93 1.32Zm-5.04-.45 3.11-1.89.7-3.57-3.1 1.89-.7 3.57Z' },
+        { id: 'following', label: 'Following', auth: false, icon: 'M18.99 3a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 4a6 6 0 1 0 0 12A6 6 0 0 0 19 7ZM18.99 26c2.96 0 5.6.58 7.87 1.65l-3.07 3.06a15.38 15.38 0 0 0-4.8-.71C10.9 30 6.3 35.16 6 43c-.02.55-.46 1-1.02 1h-2c-.55 0-1-.45-.98-1C2.33 32.99 8.7 26 19 26ZM35.7 41.88 31.82 38H45a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H31.82l3.88-3.88a1 1 0 0 0 0-1.41l-1.41-1.42a1 1 0 0 0-1.42 0l-7.3 7.3a2 2 0 0 0 0 2.82l7.3 7.3a1 1 0 0 0 1.42 0l1.41-1.42a1 1 0 0 0 0-1.41Z' },
+        { id: 'friends', label: 'Friends', auth: true, icon: 'M34 21a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm-4 4c-4.42 0-8 3.58-8 8v4h24v-4c0-4.42-3.58-8-8-8h-8ZM14 21a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-2 4c-3.31 0-6 2.69-6 6v3h12v-3c0-3.31-2.69-6-6-6h0Z' },
+        { id: 'messages', label: 'Messages', auth: true, icon: 'M24 4C12.95 4 4 11.63 4 21c0 3.76 1.43 7.2 3.83 10.07L4 44l13.73-4.58A22.2 22.2 0 0 0 24 40c11.05 0 20-7.63 20-17S35.05 4 24 4Z' },
+        { id: 'activity', label: 'Activity', auth: true, icon: 'M44 24c0 11.05-8.95 20-20 20S4 35.05 4 24 12.95 4 24 4s20 8.95 20 20Zm-18-8a2 2 0 1 0-4 0v10a2 2 0 0 0 1.05 1.77l8 4.44a2 2 0 1 0 1.9-3.52L26 24.7V16Z' },
+        { id: 'upload', label: 'Upload', auth: false, icon: 'M25 15a1 1 0 0 1 1 1v6h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-6v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-6h-6a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h6v-6a1 1 0 0 1 1-1h2ZM33.58 4.5H14.42c-1.33 0-2.45 0-3.37.07-.95.08-1.86.25-2.73.7a7 7 0 0 0-3.06 3.05 7.14 7.14 0 0 0-.69 2.73 44.6 44.6 0 0 0-.07 3.37v19.16c0 1.33 0 2.45.07 3.37.08.95.25 1.86.7 2.73a7 7 0 0 0 3.05 3.06c.87.44 1.78.6 2.73.69.92.07 2.04.07 3.37.07h19.16c1.33 0 2.45 0 3.37-.07a7.14 7.14 0 0 0 2.73-.7 7 7 0 0 0 3.06-3.05c.44-.87.6-1.78.69-2.73.07-.92.07-2.04.07-3.37V14.42c0-1.33 0-2.45-.07-3.37a7.14 7.14 0 0 0-.7-2.73 7 7 0 0 0-3.05-3.06 7.14 7.14 0 0 0-2.73-.69 44.6 44.6 0 0 0-3.37-.07ZM10.14 8.83c.2-.1.53-.21 1.24-.27.73-.06 1.69-.06 3.12-.06h19c1.43 0 2.39 0 3.12.06a3.3 3.3 0 0 1 1.24.27 3 3 0 0 1 1.31 1.3c.1.21.21.54.27 1.25.06.73.06 1.69.06 3.12v19c0 1.43 0 2.39-.06 3.12a3.3 3.3 0 0 1-.27 1.24 3 3 0 0 1-1.3 1.31c-.21.1-.54.21-1.25.27-.73.06-1.69.06-3.12.06h-19c-1.43 0-2.39 0-3.12-.06a3.3 3.3 0 0 1-1.24-.27 3 3 0 0 1-1.31-1.3c-.1-.21-.21-.54-.27-1.25-.06-.73-.06-1.69-.06-3.12v-19c0-1.43 0-2.39.06-3.12a3.3 3.3 0 0 1 .27-1.24 3 3 0 0 1 1.3-1.31Z' },
+        { id: 'live', label: 'LIVE', auth: false, icon: 'M9 8a4 4 0 0 0-4 4v24a4 4 0 0 0 4 4h30a4 4 0 0 0 4-4V12a4 4 0 0 0-4-4H9ZM18 16.5a.5.5 0 0 1 .75-.43l14 9a.5.5 0 0 1 0 .86l-14 9a.5.5 0 0 1-.75-.43v-18Z' },
+        { id: 'profile', label: 'Profile', auth: false, icon: 'M24.0003 7C20.1343 7 17.0003 10.134 17.0003 14C17.0003 17.866 20.1343 21 24.0003 21C27.8663 21 31.0003 17.866 31.0003 14C31.0003 10.134 27.8663 7 24.0003 7ZM13.0003 14C13.0003 7.92487 17.9252 3 24.0003 3C30.0755 3 35.0003 7.92487 35.0003 14C35.0003 20.0751 30.0755 25 24.0003 25C17.9252 25 13.0003 20.0751 13.0003 14ZM24.0003 33C18.0615 33 13.0493 36.9841 11.4972 42.4262C11.3457 42.9573 10.8217 43.3088 10.2804 43.1989L8.32038 42.8011C7.77914 42.6912 7.4266 42.1618 7.5683 41.628C9.49821 34.358 16.1215 29 24.0003 29C31.8792 29 38.5025 34.358 40.4324 41.628C40.5741 42.1618 40.2215 42.6912 39.6803 42.8011L37.7203 43.1989C37.179 43.3088 36.6549 42.9573 36.5035 42.4262C34.9514 36.9841 29.9391 33 24.0003 33Z' },
+        { id: 'more', label: 'More', auth: false, icon: 'M5 24a4 4 0 1 1 8 0 4 4 0 0 1-8 0Zm15 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0Zm15 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z' },
+    ], get visibleItems() { return this.menuItems.filter(i => !i.auth || this.isAuthenticated) }, init() { if (this.darkMode) document.documentElement.classList.add('dark') }, toggleTheme(targetDark) { this.darkMode = targetDark; document.documentElement.classList.toggle('dark', targetDark); localStorage.setItem('darkMode', targetDark) }, showEditProfile: false, editUsername: '{{ profile_user.username }}', editName: '{{ name|default:"" }}', editBio: '{{ bio|default:"" }}', activeTab: 'videos', prevTab: 'videos', tabDirection: 'left', sortBy: 'latest', previewPhoto: null, switchTab(tab) { var order = ['videos', 'favorites', 'liked']; this.tabDirection = order.indexOf(tab) > order.indexOf(this.activeTab) ? 'left' : 'right'; this.prevTab = this.activeTab; this.activeTab = tab }, previewProfilePhoto(e) { var file = e.target.files[0]; if (file) { var reader = new FileReader(); var self = this; reader.onload = function(ev) { self.previewPhoto = ev.target.result }; reader.readAsDataURL(file) } }, saveProfile() { var form = document.getElementById('editProfileForm'); var data = new FormData(form); fetch(form.action, { method: 'POST', body: data, headers: { 'X-CSRFToken': '{{ csrf_token }}' } }).then(r => r.json()).then(d => { if (d.success) { this.showEditProfile = false; location.reload() } }) } }" class="flex h-screen bg-white dark:bg-black">
+        <aside :class="showMorePanel ? 'w-[72px]' : 'md:w-[72px] lg:w-[280px]'" class="max-md:hidden md:flex shrink-0 bg-white dark:bg-black flex-col h-screen overflow-y-auto hide-scrollbar border-r border-neutral-300 dark:border-neutral-700 transition-all duration-300">
+            <div class="flex flex-col h-full p-0">
+                <a href="{% url 'index' %}" :class="showMorePanel ? 'mb-2 pt-3 md:flex md:justify-center' : 'mb-2 pt-3 md:flex md:justify-center lg:block lg:px-3'">
+                    <img src="{% static 'tiktok.png' %}" class="h-8" :class="showMorePanel ? 'hidden' : 'hidden lg:block'">
+                    <svg :class="showMorePanel ? 'block' : 'block lg:hidden'" class="w-6 h-6 text-black dark:text-white" fill="currentColor" viewBox="0 0 48 48"><path d="M38.077 15.854c-2.007-.06-3.826-1.02-5.198-2.307a9.534 9.534 0 0 1-1.737-2.532A8.06 8.06 0 0 1 30.562 8h-5.589v20.83a5.49 5.49 0 0 1-4.696 5.589 5.467 5.467 0 0 1-3.515-.73 5.604 5.604 0 0 1-1.951-2.148 5.688 5.688 0 0 1-.777-2.865 5.643 5.643 0 0 1 .367-1.822 5.556 5.556 0 0 1 1.046-1.822 5.469 5.469 0 0 1 1.56-1.21 5.406 5.406 0 0 1 1.83-.612 5.578 5.578 0 0 1 1.519-.052v-5.692a10.626 10.626 0 0 0-3.11.161 10.755 10.755 0 0 0-5.71 2.574 10.947 10.947 0 0 0-2.373 3.446 11.085 11.085 0 0 0-.844 4.226 11.14 11.14 0 0 0 .416 2.91 10.98 10.98 0 0 0 2.815 4.745 10.76 10.76 0 0 0 4.264 2.547 10.65 10.65 0 0 0 5.256.197 10.698 10.698 0 0 0 3.94-1.586 10.895 10.895 0 0 0 2.613-2.382A10.77 10.77 0 0 0 30.562 29.7V18.832a10.792 10.792 0 0 0 7.515 2.255v-5.233Z"/></svg>
+                </a>
+
+                <div :class="showMorePanel ? 'relative mb-2 md:flex md:justify-center md:px-0' : 'relative mb-2 md:px-0 lg:px-3 md:flex md:justify-center lg:block'">
+                    <input type="search" placeholder="Search" :class="showMorePanel ? 'hidden' : 'hidden lg:block'" class="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-full py-1.5 pl-3 pr-8 text-sm focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-400 dark:text-white dark:placeholder-neutral-400">
+                    <svg :class="showMorePanel ? 'block' : 'block lg:hidden'" class="w-5 h-5 text-neutral-400 dark:text-neutral-300" fill="currentColor" viewBox="0 0 48 48"><path d="M21.83 7.5a14.34 14.34 0 1 1 0 28.68 14.34 14.34 0 0 1 0-28.68Zm0-4a18.33 18.33 0 1 0 11.48 32.64l8.9 8.9a1 1 0 0 0 1.42 0l1.4-1.41a1 1 0 0 0 0-1.42l-8.89-8.9A18.34 18.34 0 0 0 21.83 3.5Z"/></svg>
+                    <svg :class="showMorePanel ? 'hidden' : 'hidden lg:block'" class="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 48 48"><path d="M21.83 7.5a14.34 14.34 0 1 1 0 28.68 14.34 14.34 0 0 1 0-28.68Zm0-4a18.33 18.33 0 1 0 11.48 32.64l8.9 8.9a1 1 0 0 0 1.42 0l1.4-1.41a1 1 0 0 0 0-1.42l-8.89-8.9A18.34 18.34 0 0 0 21.83 3.5Z"/></svg>
+                </div>
+
+                <nav class="flex flex-col gap-0 px-3">
+                    <template x-for="item in visibleItems">
+                        <button @click="item.id === 'more' ? (showMorePanel = !showMorePanel, showThemeOptions = false) : (showMorePanel = false, showThemeOptions = false,                         item.id === 'profile' && !isAuthenticated ? showLoginModal = true : null,                         item.id === 'profile' && isAuthenticated ? window.location.href='{% url "profile" %}' : null,                                                 item.id === 'upload' && !isAuthenticated ? showLoginModal = true : null,
+                        item.id === 'upload' && isAuthenticated ? window.location.href='{% url "upload" %}' : null,
+                        item.id === 'following' ? window.location.href='{% url "following" %}' : item.id !== 'more' && item.id !== 'upload' && item.id !== 'profile' ? window.location.href='{% url "home" %}' : null)" :class="[showMorePanel ? 'justify-center gap-0' : 'md:justify-center lg:justify-start md:gap-0 lg:gap-3', activeNav === item.id ? 'text-rose-500 bg-rose-50 font-semibold' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800 text-black dark:text-white']" class="flex items-center px-3 py-2.5 rounded-full text-base transition-colors w-full">
+                            <svg class="w-5 h-5 shrink-0" :class="activeNav === item.id ? 'text-rose-500' : 'text-black dark:text-white'" fill="currentColor" viewBox="0 0 48 48"><path :d="item.icon"></svg>
+                            <span x-text="item.label" :class="showMorePanel ? 'hidden' : 'hidden lg:inline'"></span>
+                        </button>
+                    </template>
+                </nav>
+
+                <div :class="showMorePanel ? 'hidden' : 'hidden lg:block'" class="mt-auto pt-3 border-t border-neutral-200 dark:border-neutral-700 px-3">
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center gap-2 mb-3 px-1">
+                            <div class="w-8 h-8 rounded-full bg-neutral-300 flex items-center justify-center shrink-0 overflow-hidden">
+                                {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <span class="text-sm font-semibold">{{ user.username|first|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="text-sm font-medium dark:text-white truncate">{{ user.username }}</span>
+                        </div>
+                    {% else %}
+                        <button | click="showLoginModal = true" class="w-full bg-rose-500 text-white font-semibold text-sm py-2 rounded-full hover:bg-rose-600 transition-colors mb-3">Log in</button>
+                    {% endif %}
+                    <div class="flex flex-col gap-1 text-sm text-neutral-400 font-semibold">
+                        <a href="" class="hover:underline block w-fit">Company</a>
+                        <a href="" class="hover:underline block w-fit">Program</a>
+                        <a href="" class="hover:underline block w-fit">Terms &amp; Policies</a>
+                    </div>
+                    <p class="text-sm text-neutral-400 mt-1 font-semibold">&copy; 2026 TikTok</p>
+                </div>
+            </div>
+        </aside>
+
+        <div x-show="showMorePanel" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0" class="w-[280px] shrink-0 bg-white dark:bg-black border-r border-neutral-300 dark:border-neutral-700 h-screen overflow-y-auto z-30">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+                <h2 class="font-semibold text-base dark:text-white">More</h2>
+                <button @click="showMorePanel = false; showThemeOptions = false" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors dark:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <template x-if="!showThemeOptions">
+                <div class="flex flex-col py-2">
+                    <button @click="showThemeOptions = true" class="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm dark:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+                        <span>Dark mode</span>
+                        <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm dark:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span>Settings</span>
+                    </a>
+                    <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 transition-colors text-sm text-red-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+                        <span>Log out</span>
+                    </a>
+                </div>
+            </template>
+            <template x-if="showThemeOptions">
+                <div class="flex flex-col py-2">
+                    <button @click="showThemeOptions = false" class="flex items-center gap-2 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm border-b border-neutral-100 dark:border-neutral-700 dark:text-white">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5m7 7l-7-7 7-7"/></svg>
+                        <span>Back</span>
+                    </button>
+                    <div class="px-4 py-3">
+                        <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">Appearance</p>
+                        <label class="flex items-center justify-between py-2.5 cursor-pointer" @click="toggleTheme(false)">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 dark:text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+                                <span class="text-sm dark:text-white">Light mode</span>
+                            </div>
+                            <div :class="!darkMode ? 'bg-black border-black' : 'bg-neutral-200 border-neutral-300'" class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors">
+                                <template x-if="!darkMode">
+                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>
+                                </template>
+                            </div>
+                        </label>
+                        <label class="flex items-center justify-between py-2.5 cursor-pointer" @click="toggleTheme(true)">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 dark:text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+                                <span class="text-sm dark:text-white">Dark mode</span>
+                            </div>
+                            <div :class="darkMode ? 'bg-black border-black' : 'bg-neutral-200 border-neutral-300'" class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors">
+                                <template x-if="darkMode">
+                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>
+                                </template>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <main class="flex-1 overflow-y-auto bg-white dark:bg-black">
+            <div class="max-w-4xl mx-auto px-4 py-4">
+                <div class="flex flex-row gap-10 items-start">
+                    <div style="width:130px;height:130px" class="rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shrink-0 border-2 border-neutral-200 dark:border-neutral-700 overflow-hidden">
+                        {% if profile_picture %}
+                            <img src="{{ profile_picture }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <span class="text-5xl font-bold text-neutral-400 dark:text-neutral-500">{{ profile_user.username|first|upper }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="text-xl font-bold dark:text-white">{{ profile_user.username }}</h1>
+                            <span class="text-sm text-neutral-400">| {{ profile_user.username }}</span>
+                        </div>
+                        <div class="flex items-center gap-8 mt-2 text-sm">
+                            <span style="margin-right:10px "><strong class="dark:text-white text-base" x-text="followingCount">{{ following_count }}</strong> <span class="text-neutral-500">Following</span></span>
+                            <span style="margin-right:10px"><strong class="dark:text-white text-base" x-text="followersCount">{{ followers_count }}</strong> <span class="text-neutral-500">Followers</span></span>
+                            <span><strong class="dark:text-white text-base" x-text="likesCount">{{ total_likes }}</strong> <span class="text-neutral-500">Likes</span></span>
+                        </div>
+                        <div class="flex items-center gap-4 mt-3 flex-wrap">
+                            <button @click="showEditProfile = true" class="px-5 py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg text-sm font-semibold dark:text-white transition-colors">Edit profile</button>
+                            <button class="p-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 text-black dark:text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </button>
+                            <button class="p-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 text-black dark:text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></svg>
+                            </button>
+                        </div>
+                        <p class="text-sm text-neutral-500 mt-3">{% if bio %}{{ bio }}{% else %}No bio yet.{% endif %}</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-b border-neutral-200 dark:border-neutral-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex" style="gap:60px">
+                            <button @click="switchTab('videos')" :class="activeTab === 'videos' ? 'text-rose-500 border-transparent' : 'text-neutral-500 border-transparent dark:text-neutral-400'" class="pb-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-1.5 hover:border-rose-500">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 48 48"><path d="M38.077 15.854c-2.007-.06-3.826-1.02-5.198-2.307a9.534 9.534 0 0 1-1.737-2.532A8.06 8.06 0 0 1 30.562 8h-5.589v20.83a5.49 5.49 0 0 1-4.696 5.589 5.467 5.467 0 0 1-3.515-.73 5.604 5.604 0 0 1-1.951-2.148 5.688 5.688 0 0 1-.777-2.865 5.643 5.643 0 0 1 .367-1.822 5.556 5.556 0 0 1 1.046-1.822 5.469 5.469 0 0 1 1.56-1.21 5.406 5.406 0 0 1 1.83-.612 5.578 5.578 0 0 1 1.519-.052v-5.692a10.626 10.626 0 0 0-3.11.161 10.755 10.755 0 0 0-5.71 2.574 10.947 10.947 0 0 0-2.373 3.446 11.085 11.085 0 0 0-.844 4.226 11.14 11.14 0 0 0 .416 2.91 10.98 10.98 0 0 0 2.815 4.745 10.76 10.76 0 0 0 4.264 2.547 10.65 10.65 0 0 0 5.256.197 10.698 10.698 0 0 0 3.94-1.586 10.895 10.895 0 0 0 2.613-2.382A10.77 10.77 0 0 0 30.562 29.7V18.832a10.792 10.792 0 0 0 7.515 2.255v-5.233Z"/></svg>
+                                Videos
+                            </button>
+                            <button @click="switchTab('favorites')" :class="activeTab === 'favorites' ? 'text-rose-500 border-transparent' : 'text-neutral-500 border-transparent dark:text-neutral-400'" class="pb-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-1.5 hover:border-rose-500">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                                Favorites
+                            </button>
+                            <button @click="switchTab('liked')" :class="activeTab === 'liked' ? 'text-rose-500 border-transparent' : 'text-neutral-500 border-transparent dark:text-neutral-400'" class="pb-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-1.5 hover:border-rose-500">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                Liked
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button @click="sortBy = 'latest'" :class="sortBy === 'latest' ? 'bg-neutral-900 text-white dark:bg-white dark:text-black' : 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700'" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors">Latest</button>
+                            <button @click="sortBy = 'popular'" :class="sortBy === 'popular' ? 'bg-neutral-900 text-white dark:bg-white dark:text-black' : 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700'" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors">Popular</button>
+                            <button @click="sortBy = 'oldest'" :class="sortBy === 'oldest' ? 'bg-neutral-900 text-white dark:bg-white dark:text-black' : 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700'" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors">Oldest</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 relative overflow-hidden">
+                    <div x-show="activeTab === 'videos'" x-transition:enter="transform transition ease-out duration-300" x-transition:enter-start="translate-x-8 opacity-0" x-transition:enter-end="translate-x-0 opacity-100" x-transition:leave="transform transition ease-in duration-200" x-transition:leave-start="translate-x-0 opacity-100" x-transition:leave-end="-translate-x-8 opacity-0">
+                        {% if posts %}
+                            <div class="grid grid-cols-3 gap-2">
+                                {% for post in posts %}
+                                    <a href="{% url 'post_detail' post.id %}" class="aspect-[9/16] bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden relative group">
+                                        {% if post.video %}
+                                            <video src="{{ post.video.file.url }}" class="w-full h-full object-cover" muted onmouseenter="this.play()" onmouseleave="this.pause()"></video>
+                                        {% elif post.image %}
+                                            <img src="{{ post.image.file.url }}" class="w-full h-full object-cover">
+                                        {% endif %}
+                                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
+                                        <div class="absolute bottom-2 left-2 flex items-center gap-3 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span class="flex items-center gap-1">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                                {{ post.like_set.count }}
+                                            </span>
+                                            <span class="flex items-center gap-1">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-2.25a6.75 6.75 0 1 1 0-13.5 6.75 6.75 0 0 1 0 13.5ZM12 6a.75.75 0 0 1 .75.75v5.25h3.75a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75v-6A.75.75 0 0 1 12 6Z"/></svg>
+                                                {{ post.comment_set.count }}
+                                            </span>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-16 text-neutral-400">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-neutral-300 dark:text-neutral-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"/></svg>
+                                <p class="font-semibold">No videos yet</p>
+                                <p class="text-sm mt-1">Videos you upload will appear here.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div x-show="activeTab === 'favorites'" x-transition:enter="transform transition ease-out duration-300" x-transition:enter-start="translate-x-8 opacity-0" x-transition:enter-end="translate-x-0 opacity-100" x-transition:leave="transform transition ease-in duration-200" x-transition:leave-start="translate-x-0 opacity-100" x-transition:leave-end="-translate-x-8 opacity-0">
+                        {% if bookmarked_posts %}
+                            <div class="grid grid-cols-3 gap-2">
+                                {% for post in bookmarked_posts %}
+                                    <a href="{% url 'post_detail' post.id %}" class="aspect-[9/16] bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden relative group">
+                                        {% if post.video %}
+                                            <video src="{{ post.video.file.url }}" class="w-full h-full object-cover" muted onmouseenter="this.play()" onmouseleave="this.pause()"></video>
+                                        {% elif post.image %}
+                                            <img src="{{ post.image.file.url }}" class="w-full h-full object-cover">
+                                        {% endif %}
+                                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
+                                        <div class="absolute bottom-2 left-2 flex items-center gap-3 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span class="flex items-center gap-1">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                                {{ post.like_set.count }}
+                                            </span>
+                                            <span class="flex items-center gap-1">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-2.25a6.75 6.75 0 1 1 0-13.5 6.75 6.75 0 0 1 0 13.5ZM12 6a.75.75 0 0 1 .75.75v5.25h3.75a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75v-6A.75.75 0 0 1 12 6Z"/></svg>
+                                                {{ post.comment_set.count }}
+                                            </span>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-16 text-neutral-400">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-neutral-300 dark:text-neutral-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                                <p class="font-semibold">No favorites yet</p>
+                                <p class="text-sm mt-1">Your favorited videos will appear here.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div x-show="activeTab === 'liked'" x-transition:enter="transform transition ease-out duration-300" x-transition:enter-start="translate-x-8 opacity-0" x-transition:enter-end="translate-x-0 opacity-100" x-transition:leave="transform transition ease-in duration-200" x-transition:leave-start="translate-x-0 opacity-100" x-transition:leave-end="-translate-x-8 opacity-0">
+                        {% if liked_posts %}
+                            <div class="grid grid-cols-3 gap-2">
+                                {% for post in liked_posts %}
+                                    <a href="{% url 'post_detail' post.id %}" class="aspect-[9/16] bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden relative group">
+                                        {% if post.video %}
+                                            <video src="{{ post.video.file.url }}" class="w-full h-full object-cover" muted onmouseenter="this.play()" onmouseleave="this.pause()"></video>
+                                        {% elif post.image %}
+                                            <img src="{{ post.image.file.url }}" class="w-full h-full object-cover">
+                                        {% endif %}
+                                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
+                                        <div class="absolute bottom-2 left-2 flex items-center gap-3 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span class="flex items-center gap-1">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                                {{ post.like_set.count }}
+                                            </span>
+                                            <span class="flex items-center gap-1">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-2.25a6.75 6.75 0 1 1 0-13.5 6.75 6.75 0 0 1 0 13.5ZM12 6a.75.75 0 0 1 .75.75v5.25h3.75a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75v-6A.75.75 0 0 1 12 6Z"/></svg>
+                                                {{ post.comment_set.count }}
+                                            </span>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-16 text-neutral-400">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-neutral-300 dark:text-neutral-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                <p class="font-semibold">No liked videos yet</p>
+                                <p class="text-sm mt-1">Videos you like will appear here.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+
+
+        <!-- Edit Profile Modal -->
+        <div x-show="showEditProfile" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showEditProfile = false">
+            <div class="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-lg mx-4 overflow-hidden" @click.stop>
+                <div class="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+                    <button @click="showEditProfile = false" class="text-lg font-semibold text-neutral-500 hover:text-black dark:hover:text-white transition-colors">Cancel</button>
+                    <h2 class="text-lg font-bold dark:text-white">Edit profile</h2>
+                    <button @click="saveProfile()" class="text-lg font-semibold text-rose-500 hover:text-rose-600 transition-colors">Save</button>
+                </div>
+                <form id="editProfileForm" method="post" enctype="multipart/form-data" action="{% url 'profile' %}">
+                    {% csrf_token %}
+                    <div class="p-6 space-y-5">
+                        <div class="flex items-center gap-4">
+                            <div class="relative w-16 h-16 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center shrink-0 overflow-hidden">
+                                <template x-if="previewPhoto">
+                                    <img :src="previewPhoto" class="w-full h-full object-cover">
+                                </template>
+                                <template x-if="!previewPhoto">
+                                    {% if profile_picture %}
+                                        <img src="{{ profile_picture }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        <span class="text-2xl font-bold text-neutral-400">{{ profile_user.username|first|upper }}</span>
+                                    {% endif %}
+                                </template>
+                            </div>
+                            <label class="cursor-pointer px-4 py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg text-sm font-semibold dark:text-white transition-colors">
+                                Change photo
+                                <input type="file" name="profile_picture" accept="image/*" class="hidden" @change="previewProfilePhoto">
+                            </label>
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-neutral-500 dark:text-neutral-400 block mb-1">Username</label>
+                            <input type="text" name="username" x-model="editUsername" maxlength="30" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm dark:text-white focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors" required>
+                            <p class="text-xs text-neutral-400 mt-1">www.tiktok.com/@<span x-text="editUsername"></span></p>
+                            <p class="text-xs text-neutral-400 mt-1">Usernames can only contain letters, numbers, underscores, and periods. Changing your username will also change your profile link.</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-neutral-500 dark:text-neutral-400 block mb-1">Name</label>
+                            <input type="text" name="name" x-model="editName" maxlength="30" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm dark:text-white focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors">
+                            <p class="text-xs text-neutral-400 mt-1">Your nickname can only be changed once every 7 days.</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-neutral-500 dark:text-neutral-400 block mb-1">Bio</label>
+                            <textarea name="bio" x-model="editBio" maxlength="80" rows="3" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm dark:text-white focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors resize-none"></textarea>
+                            <p class="text-xs text-neutral-400 mt-1 text-right"><span x-text="editBio.length"></span>/80</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

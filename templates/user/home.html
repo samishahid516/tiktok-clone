@@ -1,0 +1,648 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+    <link rel="stylesheet" href="{% static 'src/output.css' %}">
+    <script defer src="{% static 'src/alpine.min.js' %}"></script>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    </style>
+</head>
+<body>
+    <script id="posts-data" type="application/json">{{ posts_json|safe }}</script>
+    <div x-data="homePage()" class="flex h-screen bg-black relative">
+        <aside :class="showMorePanel || showMessages || showActivity ? 'w-[72px]' : 'md:w-[72px] lg:w-[280px]'" class="max-md:hidden md:flex shrink-0 bg-white dark:bg-black flex-col h-screen overflow-y-auto hide-scrollbar border-r border-neutral-300 dark:border-neutral-700 transition-all duration-300">
+            <div class="flex flex-col h-full p-0">
+                <a href="{% url 'index' %}" :class="showMorePanel || showMessages || showActivity ? 'mb-2 pt-3 md:flex md:justify-center' : 'mb-2 pt-3 md:flex md:justify-center lg:block lg:px-3'">
+                    <img src="{% static 'tiktok.png' %}" class="h-8" :class="showMorePanel || showMessages || showActivity ? 'hidden' : 'hidden lg:block'">
+                    <svg :class="showMorePanel || showMessages || showActivity ? 'block' : 'block lg:hidden'" class="w-6 h-6 text-black dark:text-white" fill="currentColor" viewBox="0 0 48 48"><path d="M38.077 15.854c-2.007-.06-3.826-1.02-5.198-2.307a9.534 9.534 0 0 1-1.737-2.532A8.06 8.06 0 0 1 30.562 8h-5.589v20.83a5.49 5.49 0 0 1-4.696 5.589 5.467 5.467 0 0 1-3.515-.73 5.604 5.604 0 0 1-1.951-2.148 5.688 5.688 0 0 1-.777-2.865 5.643 5.643 0 0 1 .367-1.822 5.556 5.556 0 0 1 1.046-1.822 5.469 5.469 0 0 1 1.56-1.21 5.406 5.406 0 0 1 1.83-.612 5.578 5.578 0 0 1 1.519-.052v-5.692a10.626 10.626 0 0 0-3.11.161 10.755 10.755 0 0 0-5.71 2.574 10.947 10.947 0 0 0-2.373 3.446 11.085 11.085 0 0 0-.844 4.226 11.14 11.14 0 0 0 .416 2.91 10.98 10.98 0 0 0 2.815 4.745 10.76 10.76 0 0 0 4.264 2.547 10.65 10.65 0 0 0 5.256.197 10.698 10.698 0 0 0 3.94-1.586 10.895 10.895 0 0 0 2.613-2.382A10.77 10.77 0 0 0 30.562 29.7V18.832a10.792 10.792 0 0 0 7.515 2.255v-5.233Z"/></svg>
+                </a>
+
+                <div :class="showMorePanel || showMessages || showActivity ? 'relative mb-2 md:flex md:justify-center md:px-0' : 'relative mb-2 md:px-0 lg:px-3 md:flex md:justify-center lg:block'">
+                    <input type="search" placeholder="Search" :class="showMorePanel || showMessages || showActivity ? 'hidden' : 'hidden lg:block'" class="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-full py-1.5 pl-3 pr-8 text-sm focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-400 dark:text-white dark:placeholder-neutral-400">
+                    <svg :class="showMorePanel || showMessages || showActivity ? 'block' : 'block lg:hidden'" class="w-5 h-5 text-neutral-400 dark:text-neutral-300" fill="currentColor" viewBox="0 0 48 48"><path d="M21.83 7.5a14.34 14.34 0 1 1 0 28.68 14.34 14.34 0 0 1 0-28.68Zm0-4a18.33 18.33 0 1 0 11.48 32.64l8.9 8.9a1 1 0 0 0 1.42 0l1.4-1.41a1 1 0 0 0 0-1.42l-8.89-8.9A18.34 18.34 0 0 0 21.83 3.5Z"/></svg>
+                    <svg :class="showMorePanel || showMessages || showActivity ? 'hidden' : 'hidden lg:block'" class="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 48 48"><path d="M21.83 7.5a14.34 14.34 0 1 1 0 28.68 14.34 14.34 0 0 1 0-28.68Zm0-4a18.33 18.33 0 1 0 11.48 32.64l8.9 8.9a1 1 0 0 0 1.42 0l1.4-1.41a1 1 0 0 0 0-1.42l-8.89-8.9A18.34 18.34 0 0 0 21.83 3.5Z"/></svg>
+                </div>
+
+                <nav class="flex flex-col gap-0 px-3">
+                    <template x-for="item in visibleItems">
+                        <button @click="item.id === 'more' ? (showMorePanel = !showMorePanel, showThemeOptions = false) : (showMorePanel = false, showThemeOptions = false,                         item.id === 'messages' ? (showMessages = true, showActivity = false, fetchConversations()) : null,
+                         item.id === 'activity' ? (showActivity = true, showMessages = false, activityTab = 'all', fetchActivities()) : null,
+                         item.id === 'profile' && !isAuthenticated ? showLoginModal = true : null,
+                         item.id === 'profile' && isAuthenticated ? window.location.href='{% url "profile" %}' : null,
+                         item.id === 'upload' && !isAuthenticated ? showLoginModal = true : null,
+                         item.id === 'upload' && isAuthenticated ? window.location.href='{% url "upload" %}' : null,
+                         item.id === 'following' ? window.location.href='{% url "following" %}' : item.id !== 'more' && item.id !== 'upload' && item.id !== 'profile' && item.id !== 'activity' && item.id !== 'messages' ? window.location.href='{% url "home" %}' : null,
+                         activeNav = item.id)" :class="[showMorePanel || showMessages || showActivity ? 'justify-center gap-0' : 'md:justify-center lg:justify-start md:gap-0 lg:gap-3', activeNav === item.id ? 'text-rose-500 bg-rose-50 font-semibold' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800 text-black dark:text-white']" class="flex items-center px-3 py-2.5 rounded-full text-base transition-colors w-full">
+                            <svg class="w-5 h-5 shrink-0" :class="activeNav === item.id ? 'text-rose-500' : 'text-black dark:text-white'" fill="currentColor" viewBox="0 0 48 48"><path :d="item.icon"></svg>
+                            <span x-text="item.label" :class="showMorePanel || showMessages || showActivity ? 'hidden' : 'hidden lg:inline'"></span>
+                        </button>
+                    </template>
+                </nav>
+
+
+                <div :class="showMorePanel || showMessages || showActivity ? 'hidden' : 'hidden lg:block'" class="mt-auto pt-3 border-t border-neutral-200 dark:border-neutral-700 px-3">
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center gap-2 mb-3 px-1">
+                            <div class="w-8 h-8 rounded-full bg-neutral-300 flex items-center justify-center shrink-0 overflow-hidden">
+                                {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <span class="text-sm font-semibold">{{ user.username|first|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="text-sm font-medium dark:text-white truncate">{{ user.username }}</span>
+                        </div>
+                    {% else %}
+                        <button @click="showLoginModal = true" class="w-full bg-rose-500 text-white font-semibold text-sm py-2 rounded-full hover:bg-rose-600 transition-colors mb-3">Log in</button>
+                    {% endif %}
+                    <div class="flex flex-col gap-1 text-sm text-neutral-400 font-semibold">
+                        <a href="" class="hover:underline block w-fit">Company</a>
+                        <a href="" class="hover:underline block w-fit">Program</a>
+                        <a href="" class="hover:underline block w-fit">Terms &amp; Policies</a>
+                    </div>
+                    <p class="text-sm text-neutral-400 mt-1 font-semibold">© 2026 TikTok</p>
+                </div>
+            </div>
+        </aside>
+
+        <div x-show="showMorePanel" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0" class="w-[280px] shrink-0 bg-white dark:bg-black border-r border-neutral-300 dark:border-neutral-700 h-screen overflow-y-auto z-30">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+                <h2 class="font-semibold text-base dark:text-white">More</h2>
+                <button @click="showMorePanel = false; showThemeOptions = false" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors dark:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <template x-if="!showThemeOptions">
+                <div class="flex flex-col py-2">
+                    <button @click="showThemeOptions = true" class="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm dark:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+                        <span>Dark mode</span>
+                        <svg class="w-4 h-4 ml-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm dark:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span>Settings</span>
+                    </a>
+                    <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 transition-colors text-sm text-red-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+                        <span>Log out</span>
+                    </a>
+                </div>
+            </template>
+            <template x-if="showThemeOptions">
+                <div class="flex flex-col py-2">
+                    <button @click="showThemeOptions = false" class="flex items-center gap-2 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm border-b border-neutral-100 dark:border-neutral-700 dark:text-white">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5m7 7l-7-7 7-7"/></svg>
+                        <span>Back</span>
+                    </button>
+                    <div class="px-4 py-3">
+                        <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">Appearance</p>
+                        <label class="flex items-center justify-between py-2.5 cursor-pointer" @click="toggleTheme(false)">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 dark:text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+                                <span class="text-sm dark:text-white">Light mode</span>
+                            </div>
+                            <div :class="!darkMode ? 'bg-black border-black' : 'bg-neutral-200 border-neutral-300'" class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors">
+                                <template x-if="!darkMode">
+                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>
+                                </template>
+                            </div>
+                        </label>
+                        <label class="flex items-center justify-between py-2.5 cursor-pointer" @click="toggleTheme(true)">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 dark:text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+                                <span class="text-sm dark:text-white">Dark mode</span>
+                            </div>
+                            <div :class="darkMode ? 'bg-black border-black' : 'bg-neutral-200 border-neutral-300'" class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors">
+                                <template x-if="darkMode">
+                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>
+                                </template>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div x-show="showActivity" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0" class="w-[360px] shrink-0 bg-white dark:bg-black border-r border-neutral-300 dark:border-neutral-700 h-screen overflow-y-auto z-30 flex flex-col">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+                    <h2 class="font-semibold text-base dark:text-white">Activity</h2>
+                    <button @click="showActivity = false" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors dark:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-2 px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+                    <button @click="activityTab = 'all'; fetchActivities()" :class="activityTab === 'all' ? 'bg-rose-500 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700'" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors">All activity</button>
+                    <button @click="activityTab = 'like'; fetchActivities()" :class="activityTab === 'like' ? 'bg-rose-500 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700'" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors">Likes</button>
+                    <button @click="activityTab = 'comment'; fetchActivities()" :class="activityTab === 'comment' ? 'bg-rose-500 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700'" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors">Comments</button>
+                    <button @click="activityTab = 'mention'; fetchActivities()" :class="activityTab === 'mention' ? 'bg-rose-500 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700'" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors">Mentions and tags</button>
+                    <button @click="activityTab = 'follow'; fetchActivities()" :class="activityTab === 'follow' ? 'bg-rose-500 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700'" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors">Followers</button>
+                </div>
+                <div class="flex-1 overflow-y-auto hide-scrollbar p-2 space-y-1">
+                    <template x-for="a in activities" :key="a.id">
+                        <a :href="a.post_id ? '/post/' + a.post_id + '/' : '#'" class="flex items-start gap-3 px-3 py-2.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors">
+                            <div class="w-10 h-10 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-sm font-bold shrink-0 dark:text-white" x-text="a.actor.charAt(0).toUpperCase()"></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm dark:text-white" x-text="a.text"></p>
+                                <p class="text-xs text-neutral-400 mt-0.5" x-text="new Date(a.time).toLocaleDateString()"></p>
+                            </div>
+                        </a>
+                    </template>
+                    <template x-if="activities.length === 0">
+                        <div class="flex flex-col items-center justify-center h-full text-center py-16 px-4">
+                            <template x-if="activityTab === 'all'">
+                                <svg class="w-16 h-16 text-neutral-300 dark:text-neutral-600 mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+                            </template>
+                            <template x-if="activityTab === 'like'">
+                                <svg class="w-16 h-16 text-neutral-300 dark:text-neutral-600 mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                            </template>
+                            <template x-if="activityTab === 'comment'">
+                                <svg class="w-16 h-16 text-neutral-300 dark:text-neutral-600 mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+                            </template>
+                            <template x-if="activityTab === 'mention'">
+                                <svg class="w-16 h-16 text-neutral-300 dark:text-neutral-600 mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path d="M6 6h.008v.008H6V6z"/></svg>
+                            </template>
+                            <template x-if="activityTab === 'follow'">
+                                <svg class="w-16 h-16 text-neutral-300 dark:text-neutral-600 mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+                            </template>
+                            <p class="font-semibold dark:text-white mt-4">No <span x-text="{'like':'likes','comment':'comments','mention':'mentions','follow':'followers'}[activityTab] || 'notifications'"></span> yet</p>
+                            <p class="text-sm text-neutral-400 mt-1 text-center px-4">
+                                <template x-if="activityTab === 'all'">Notifications about your account will appear here.</template>
+                                <template x-if="activityTab === 'like'">When someone likes your videos, you'll see it here.</template>
+                                <template x-if="activityTab === 'comment'">When someone comments on one of your videos, you'll see it here.</template>
+                                <template x-if="activityTab === 'mention'">When someone mentions you, you'll see it here.</template>
+                                <template x-if="activityTab === 'follow'">When someone new follows you, you'll see it here.</template>
+                            </p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        <div x-show="showMessages" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0" class="w-[360px] shrink-0 bg-white dark:bg-black border-r border-neutral-300 dark:border-neutral-700 h-screen overflow-y-auto z-30 flex flex-col">
+            <template x-if="!selectedConversation">
+                <div class="flex flex-col h-full">
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+                        <h2 class="font-semibold text-base dark:text-white">Messages</h2>
+                        <button @click="showMessages = false; conversations = []; selectedConversation = null" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors dark:text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto hide-scrollbar p-2 space-y-1">
+                        <template x-if="conversations.length === 0">
+                            <div class="flex flex-col items-center justify-center h-full text-center py-16 px-4">
+                                <svg class="w-16 h-16 text-neutral-300 dark:text-neutral-600 mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+                                <p class="font-semibold dark:text-white">No messages yet</p>
+                                <p class="text-sm text-neutral-400 mt-1">When someone comments on your posts, their message will appear here.</p>
+                            </div>
+                        </template>
+                        <template x-for="c in conversations" :key="c.user_id">
+                            <button @click="selectedConversation = c" class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors text-left">
+                                <div class="w-10 h-10 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-sm font-bold shrink-0 dark:text-white" x-text="c.username.charAt(0).toUpperCase()"></div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-sm font-semibold dark:text-white truncate" x-text="c.username"></p>
+                                        <span class="text-[10px] text-neutral-400 shrink-0" x-text="new Date(c.time).toLocaleDateString()"></span>
+                                    </div>
+                                    <p class="text-sm text-neutral-500 truncate" x-text="c.text"></p>
+                                </div>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </template>
+            <template x-if="selectedConversation">
+                <div class="flex flex-col h-full">
+                    <div class="flex items-center gap-3 px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+                        <button @click="selectedConversation = null" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors dark:text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5m7 7l-7-7 7-7"/></svg>
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-bold shrink-0 dark:text-white" x-text="selectedConversation.username.charAt(0).toUpperCase()"></div>
+                            <div>
+                                <p class="text-sm font-semibold dark:text-white" x-text="selectedConversation.username"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto hide-scrollbar px-4 py-3 space-y-3">
+                        <div class="flex gap-2 items-start max-w-[80%]">
+                            <div class="w-7 h-7 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-[10px] font-bold shrink-0 dark:text-white" x-text="selectedConversation.username.charAt(0).toUpperCase()"></div>
+                            <div class="bg-neutral-100 dark:bg-neutral-800 rounded-2xl rounded-tl-none px-3 py-2">
+                                <p class="text-sm dark:text-white" x-text="selectedConversation.text"></p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[10px] text-neutral-400" x-text="new Date(selectedConversation.time).toLocaleString()"></span>
+                                    <button @click="likeConversation(selectedConversation)" class="text-neutral-400 hover:text-red-500 transition-colors">
+                                        <svg class="w-3.5 h-3.5" :class="selectedConversation.liked ? 'fill-red-500 text-red-500' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-neutral-200 dark:border-neutral-700 px-4 py-3">
+                        <form @submit.prevent="sendReply(selectedConversation)" class="flex items-center gap-2">
+                            <input type="text" x-model="replyText" placeholder="Reply to " class="flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-full px-4 py-2 text-sm dark:text-white focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors">
+                            <button type="submit" class="p-2 text-rose-500 hover:text-rose-600 transition-colors disabled:opacity-40" :disabled="!replyText.trim()">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3.4 20.4L21.85 12 3.4 3.6v6.6l13.2 1.8L3.4 13.8v6.6z"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <main @wheel.prevent="if (!scrollCooldown) { scrollCooldown = true; setTimeout(() => scrollCooldown = false, 1000); event.deltaY > 0 ? (currentIndex < videos.length - 1 ? currentIndex++ : null) : (currentIndex > 0 ? currentIndex-- : null) }" class="flex-1 flex items-end justify-center bg-white dark:bg-black max-md:pt-12 transition-colors">
+            <div class="flex items-end gap-0 h-full py-8">
+                <div class="h-full flex items-center overflow-hidden relative">
+                    <div class="transition-transform duration-500 ease-in-out w-full h-full flex flex-col"
+                         :style="`transform: translateY(-${currentIndex * 100}%)`">
+                        <template x-for="(video, i) in videos" :key="i">
+                            <div class="w-full h-full shrink-0 flex items-center justify-center">
+                                <div class="aspect-[9/16] h-full max-h-[calc(100vh-10px)] min-w-[300px] bg-neutral-950 rounded-2xl overflow-hidden relative group cursor-pointer">
+                                    <template x-if="video.has_video && video.video_url">
+                                        <video :src="video.video_url" class="absolute inset-0 w-full h-full object-cover rounded-2xl" loop muted playsinline autoplay @click="$el.paused ? $el.play() : $el.pause()"></video>
+                                    </template>
+                                    <template x-if="!video.has_video && video.image_url">
+                                        <img :src="video.image_url" class="absolute inset-0 w-full h-full object-cover rounded-2xl">
+                                    </template>
+                                    <div class="absolute bottom-4 left-4 right-4 z-10">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-full bg-neutral-600 overflow-hidden shrink-0 flex items-center justify-center text-white text-xs font-bold" x-text="video.user.charAt(0).toUpperCase()"></div>
+                                            <div>
+                                                <p class="text-white text-sm font-semibold" x-text="video.handle"></p>
+                                                <p class="text-white/80 text-xs" x-text="video.desc"></p>
+                                                <p x-show="video.hashtags" class="text-rose-500 text-xs mt-0.5" x-text="video.hashtags"></p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2 mt-2">
+                                            <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full">♬ original sound - <span x-text="video.handle"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center gap-3 pl-3 pb-2">
+                    <button @click="isAuthenticated ? null : showLoginModal = true" class="flex flex-col items-center gap-0.5">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 overflow-hidden shadow-sm flex items-center justify-center text-black dark:text-white text-xs font-bold">
+                            <span x-text="videos.length ? videos[currentIndex].user.charAt(0).toUpperCase() : ''"></span>
+                        </div>
+                        <span class="text-neutral-600 dark:text-neutral-400 text-[10px]" x-text="videos.length ? videos[currentIndex].handle.replace('@', '') : ''"></span>
+                    </button>
+                    <button @click="toggleLike(currentIndex)" class="flex flex-col items-center gap-0.5 group">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 transition-all duration-500" :class="videos[currentIndex]?.liked ? 'text-red-500 fill-red-500' : 'text-black dark:text-white'" fill="currentColor" viewBox="0 0 48 48"><path d="M40.96 24.15c1.83-4.8 1.05-8.61-.8-11.33a10.87 10.87 0 0 0-6.34-4.49 9.43 9.43 0 0 0-6.83 1.17c-1.08.65-2.1 1.53-2.99 2.66-.9-1.13-1.9-2.01-3-2.66a9.43 9.43 0 0 0-6.82-1.17 10.87 10.87 0 0 0-6.34 4.49c-1.85 2.72-2.63 6.54-.8 11.33 1.43 3.74 4.5 7.23 7.6 9.98a46.31 46.31 0 0 0 8.6 6.12l.76.4.76-.4a46.31 46.31 0 0 0 8.6-6.12c3.1-2.75 6.17-6.24 7.6-9.98ZM24 17.58c2.3-2.88 4.7-6.2 9.03-5.33a6.95 6.95 0 0 1 3.82 2.81c1.07 1.58 1.76 4.02.37 7.66-1.09 2.86-3.6 5.82-6.51 8.43A44.84 44.84 0 0 1 24 36.09a44.84 44.84 0 0 1-6.7-4.94c-2.93-2.6-5.43-5.57-6.52-8.43-1.4-3.64-.7-6.08.37-7.66a6.95 6.95 0 0 1 3.82-2.8c4.33-.88 6.73 2.44 9.03 5.32Z"/></svg>
+                        </div>
+                        <span class="text-neutral-600 dark:text-neutral-400 text-[10px]" x-text="videos[currentIndex]?.likes ?? 0"></span>
+                    </button>
+                    <button @click="openComments(currentIndex)" class="flex flex-col items-center gap-0.5">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 text-black dark:text-white" fill="currentColor" viewBox="0 0 48 48"><path d="M28 34h-4c-7.68 0-12.04-1.83-14.48-4.07C7.14 27.74 6 24.58 6 20.5 6 13.85 13.16 7 24 7s18 6.85 18 13.5c0 4.46-1.93 8.49-5.3 12.23a45.03 45.03 0 0 1-8.7 7.23V34Zm0 10.7c9.52-5.82 18-13.66 18-24.2C46 10.84 36.15 3 24 3S2 10.84 2 20.5 7.5 38 24 38v7.32a.99.99 0 0 0 1.47.86A93.58 93.58 0 0 0 28 44.7Z"/></svg>
+                        </div>
+                        <span class="text-neutral-600 dark:text-neutral-400 text-[10px]" x-text="videos[currentIndex]?.comments ?? 0"></span>
+                    </button>
+                    <button @click="toggleBookmark(currentIndex)" class="flex flex-col items-center gap-0.5">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 transition-all duration-500" :class="videos[currentIndex]?.bookmarked ? 'text-yellow-500 fill-yellow-500' : 'text-black dark:text-white'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4.5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v15.13a1 1 0 0 1-1.555.831l-6.167-4.12a.5.5 0 0 0-.556 0l-6.167 4.12A1 1 0 0 1 4 19.63z"/></svg>
+                        </div>
+                        <span class="text-neutral-600 dark:text-neutral-400 text-[10px]">Save</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-0.5">
+                        <div class="w-9 h-9 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors shadow-sm">
+                            <svg class="w-5 h-5 text-black dark:text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M10.938 3.175a.674.674 0 0 1 1.138-.488l6.526 6.215c.574.547.554 1.47-.043 1.991l-6.505 5.676a.674.674 0 0 1-1.116-.508V13.49s-6.985-1.258-9.225 2.854c-.209.384-1.023.518-.857-1.395.692-3.52 2.106-9.017 10.082-9.017z"/></svg>
+                        </div>
+                    </button>
+                </div>
+
+            </div>
+        </main>
+
+        <div x-show="showComments" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-x-8" x-transition:enter-end="opacity-100 translate-x-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-x-0" x-transition:leave-end="opacity-0 translate-x-8" class="fixed right-0 top-0 h-full w-[380px] max-w-full z-40 bg-white dark:bg-neutral-900 shadow-2xl border-l border-neutral-200 dark:border-neutral-700 flex flex-col">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+                <h2 class="font-semibold dark:text-white text-base" x-text="videos[currentIndex]?.comments + ' Comments'"></h2>
+                <button @click="showComments = false; comments = []" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors dark:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto hide-scrollbar px-4 py-3 space-y-4">
+                <template x-for="c in comments" :key="c.id">
+                    <div>
+                        <div class="flex gap-2">
+                            <div class="w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-bold shrink-0 dark:text-white" x-text="c.username.charAt(0).toUpperCase()"></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold dark:text-white" x-text="c.username"></p>
+                                <p class="text-sm dark:text-neutral-300" x-text="c.text"></p>
+                                <div class="flex items-center gap-3 mt-1 text-xs text-neutral-400">
+                                    <button @click="c.replies.length ? c.showReplies = !c.showReplies : c.showReplies = true" class="hover:font-semibold" x-text="c.reply_count + ' replies'"></button>
+                                    <button @click="toggleCommentLike(c)" class="flex items-center gap-0.5 hover:text-red-500" :class="c.liked ? 'text-red-500' : ''">
+                                        <svg class="w-3.5 h-3.5" :class="c.liked ? 'fill-current' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                        <span x-text="c.likes"></span>
+                                    </button>
+                                    <button @click="c.showReply = !c.showReply; c.replyText = ''" class="hover:font-semibold">Reply</button>
+                                </div>
+                                <div x-show="c.showReply" class="mt-2 flex gap-2">
+                                    <input x-model="c.replyText" @keydown.enter="submitReply(c, $el)" type="text" placeholder="Write a reply..." class="flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-full px-3 py-1.5 text-xs focus:outline-none dark:text-white dark:placeholder-neutral-400">
+                                    <button @click="submitReply(c, $el)" :disabled="!c.replyText?.trim()" class="bg-rose-500 text-white text-[10px] font-semibold px-3 py-1.5 rounded-full hover:bg-rose-600 disabled:opacity-50 transition-colors">Post</button>
+                                </div>
+                                <template x-if="c.showReplies">
+                                    <div class="mt-2 ml-2 pl-3 border-l-2 border-neutral-200 dark:border-neutral-700 space-y-2">
+                                        <template x-for="r in c.replies" :key="r.id">
+                                            <div class="flex gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-[10px] font-bold shrink-0 dark:text-white" x-text="r.username.charAt(0).toUpperCase()"></div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-xs font-semibold dark:text-white" x-text="r.username"></p>
+                                                    <p class="text-sm dark:text-neutral-300" x-text="r.text"></p>
+                                                    <div class="flex items-center gap-3 mt-1 text-xs text-neutral-400">
+                                                        <button @click="toggleCommentLike(r)" class="flex items-center gap-0.5 hover:text-red-500" :class="r.liked ? 'text-red-500' : ''">
+                                                            <svg class="w-3 h-3" :class="r.liked ? 'fill-current' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                                            <span x-text="r.likes"></span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="!comments.length">
+                    <div class="text-center py-10 text-neutral-400 dark:text-neutral-500">
+                        <p class="text-sm font-semibold">No comments yet</p>
+                        <p class="text-xs mt-1">Be the first to comment.</p>
+                    </div>
+                </template>
+            </div>
+            <div class="border-t border-neutral-200 dark:border-neutral-700 p-3">
+                <div class="flex gap-2">
+                    <input x-model="commentText" @keydown.enter="submitComment(currentIndex)" type="text" placeholder="Add a comment..." class="flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-full px-3 py-2 text-sm focus:outline-none dark:text-white dark:placeholder-neutral-400 comment-input">
+                    <button @click="submitComment(currentIndex)" :disabled="!commentText.trim()" class="bg-rose-500 text-white text-xs font-semibold px-4 py-2 rounded-full hover:bg-rose-600 disabled:opacity-50 transition-colors">Post</button>
+                </div>
+            </div>
+        </div>
+        <div x-show="showComments" class="fixed inset-0 bg-black/30 z-30" @click="showComments = false; comments = []"></div>
+
+        <div class="max-[519px]:hidden min-[520px]:flex items-center justify-center h-screen bg-white dark:bg-black transition-colors">
+            {% include "components/navigation_dots.html" %}
+        </div>
+        <div class="hidden max-md:flex items-center justify-between fixed top-0 left-0 right-0 z-30 bg-white dark:bg-black border-b border-neutral-200 dark:border-neutral-700 h-12 px-3 transition-colors">
+            <a href="{% url 'index' %}">
+                <img src="{% static 'tiktok.png' %}" class="h-7">
+            </a>
+            <button class="p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full dark:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+        <div x-show="showLoginModal"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="fixed inset-0 z-50 flex items-center justify-center" @click.self="showLoginModal = false">
+                <div class="absolute inset-0 bg-black/50"></div>
+                <div class="relative bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md mx-4 overflow-hidden shadow-2xl py-4">
+                    <div class="flex items-center justify-center px-6 pt-6 pb-2 relative">
+                        <h2 class="text-2xl font-bold dark:text-white">Log in to TikTok</h2>
+                        <button @click="showLoginModal = false" class="p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors absolute right-4">
+                            <svg class="w-5 h-5 dark:text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="px-6 pb-6 flex flex-col gap-2.5 max-w-[320px] mx-auto">
+                        <button class="flex items-center w-full border border-neutral-300 dark:border-neutral-600 rounded-full py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm font-medium dark:text-white px-4">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"/><path d="M13.5 14.625c0-.621.504-1.125 1.125-1.125h.75a.375.375 0 01.375.375v.75c0 .621-.504 1.125-1.125 1.125h-.75a1.125 1.125 0 01-1.125-1.125v-.75zM18 15.75a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75zM16.5 18.75a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75zM19.5 16.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75zM18 19.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75z"/></svg>
+                            <span class="flex-1 text-center">Use QR code</span>
+                        </button>
+                        <button @click="window.location.href='{% url "login" %}'" class="flex items-center w-full border border-neutral-300 dark:border-neutral-600 rounded-full py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm font-medium dark:text-white px-4">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
+                            <span class="flex-1 text-center">Username or email</span>
+                        </button>
+                        <div class="flex items-center gap-3 my-1">
+                            <div class="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
+                            <span class="text-xs text-neutral-400 font-medium">or continue with</span>
+                            <div class="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
+                        </div>
+                        <button class="flex items-center w-full border border-neutral-300 dark:border-neutral-600 rounded-full py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm font-medium dark:text-white px-4">
+                            <svg class="w-5 h-5 shrink-0 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            <span class="flex-1 text-center">Continue with Facebook</span>
+                        </button>
+                        <button class="flex items-center w-full border border-neutral-300 dark:border-neutral-600 rounded-full py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm font-medium dark:text-white px-4">
+                            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                            <span class="flex-1 text-center">Continue with Google</span>
+                        </button>
+                        <button class="flex items-center w-full border border-neutral-300 dark:border-neutral-600 rounded-full py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm font-medium dark:text-white px-4">
+                            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                            <span class="flex-1 text-center">Continue with Apple</span>
+                        </button>
+                        <p class="text-xs text-neutral-400 text-center mt-8 leading-4 max-w-sm mx-auto">
+                            By continuing, you agree to TikTok’s <a href="#" class="text-black dark:text-white font-semibold hover:underline">Terms of Service</a> and confirm that you have read TikTok’s <a href="#" class="text-black dark:text-white font-semibold hover:underline">Privacy Policy</a>.
+                        </p>
+                        <div class="flex items-center justify-center gap-1 mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                            <span class="text-sm text-neutral-500">Don't have an account?</span>
+                            <a href="{% url 'signup' %}" class="text-sm font-semibold text-rose-500 hover:underline">Sign up</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <div x-show="showToast" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-neutral-900 dark:bg-white text-white dark:text-black text-sm font-semibold px-4 py-2 rounded-full shadow-lg" x-text="toastMessage"></div>
+    </div>
+    <script>
+        function homePage() {
+            return {
+                activeNav: 'for-you',
+                currentIndex: 0,
+                scrollCooldown: false,
+                showMorePanel: false,
+                showThemeOptions: false,
+                showLoginModal: false,
+                showToast: false,
+                toastMessage: '',
+                toastTimeout: null,
+                showMessages: false,
+                showActivity: false,
+                activityTab: 'all',
+                activities: [],
+                conversations: [],
+                selectedConversation: null,
+                replyText: '',
+                showComments: false,
+                showCommentInput: false,
+                commentText: '',
+                comments: [],
+                darkMode: localStorage.getItem('darkMode') === 'true',
+                isAuthenticated: {{ user.is_authenticated|lower }},
+                csrfToken: '{{ csrf_token }}',
+                videos: JSON.parse(document.getElementById('posts-data').textContent),
+                menuItems: [
+                    { id: 'for-you', label: 'For You', auth: false, icon: 'M24.9505 7.84001C24.3975 7.38666 23.6014 7.38666 23.0485 7.84003L6.94846 21.04C6.45839 21.4418 6.2737 22.1083 6.48706 22.705C6.70041 23.3017 7.26576 23.7 7.89949 23.7H10.2311L11.4232 36.7278C11.5409 38.0149 12.6203 39 13.9128 39H21.5C22.0523 39 22.5 38.5523 22.5 38V28.3153C22.5 27.763 22.9477 27.3153 23.5 27.3153H24.5C25.0523 27.3153 25.5 27.763 25.5 28.3153V38C25.5 38.5523 25.9477 39 26.5 39H34.0874C35.3798 39 36.4592 38.0149 36.577 36.7278L37.7691 23.7H40.1001C40.7338 23.7 41.2992 23.3017 41.5125 22.705C41.7259 22.1082 41.5412 21.4418 41.0511 21.04L24.9505 7.84001Z' },
+                    { id: 'explore', label: 'Explore', auth: false, icon: 'M24 37.4a13.4 13.4 0 1 0 0-26.8 13.4 13.4 0 0 0 0 26.8ZM40.5 24a16.5 16.5 0 1 1-33 0 16.5 16.5 0 0 1 33 0ZM27.13 27.18 19 32.1a.6.6 0 0 1-.9-.63l1.84-9.33a2 2 0 0 1 .92-1.32L29 15.9a.6.6 0 0 1 .9.63l-1.84 9.33a2 2 0 0 1-.93 1.32Zm-5.04-.45 3.11-1.89.7-3.57-3.1 1.89-.7 3.57Z' },
+                    { id: 'following', label: 'Following', auth: false, icon: 'M18.99 3a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 4a6 6 0 1 0 0 12A6 6 0 0 0 19 7ZM18.99 26c2.96 0 5.6.58 7.87 1.65l-3.07 3.06a15.38 15.38 0 0 0-4.8-.71C10.9 30 6.3 35.16 6 43c-.02.55-.46 1-1.02 1h-2c-.55 0-1-.45-.98-1C2.33 32.99 8.7 26 19 26ZM35.7 41.88 31.82 38H45a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H31.82l3.88-3.88a1 1 0 0 0 0-1.41l-1.41-1.42a1 1 0 0 0-1.42 0l-7.3 7.3a2 2 0 0 0 0 2.82l7.3 7.3a1 1 0 0 0 1.42 0l1.41-1.42a1 1 0 0 0 0-1.41Z' },
+                    { id: 'friends', label: 'Friends', auth: true, icon: 'M34 21a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm-4 4c-4.42 0-8 3.58-8 8v4h24v-4c0-4.42-3.58-8-8-8h-8ZM14 21a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-2 4c-3.31 0-6 2.69-6 6v3h12v-3c0-3.31-2.69-6-6-6h0Z' },
+                    { id: 'messages', label: 'Messages', auth: true, icon: 'M24 4C12.95 4 4 11.63 4 21c0 3.76 1.43 7.2 3.83 10.07L4 44l13.73-4.58A22.2 22.2 0 0 0 24 40c11.05 0 20-7.63 20-17S35.05 4 24 4Z' },
+                    { id: 'activity', label: 'Activity', auth: true, icon: 'M44 24c0 11.05-8.95 20-20 20S4 35.05 4 24 12.95 4 24 4s20 8.95 20 20Zm-18-8a2 2 0 1 0-4 0v10a2 2 0 0 0 1.05 1.77l8 4.44a2 2 0 1 0 1.9-3.52L26 24.7V16Z' },
+                    { id: 'upload', label: 'Upload', auth: false, icon: 'M25 15a1 1 0 0 1 1 1v6h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-6v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-6h-6a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h6v-6a1 1 0 0 1 1-1h2ZM33.58 4.5H14.42c-1.33 0-2.45 0-3.37.07-.95.08-1.86.25-2.73.7a7 7 0 0 0-3.06 3.05 7.14 7.14 0 0 0-.69 2.73 44.6 44.6 0 0 0-.07 3.37v19.16c0 1.33 0 2.45.07 3.37.08.95.25 1.86.7 2.73a7 7 0 0 0 3.05 3.06c.87.44 1.78.6 2.73.69.92.07 2.04.07 3.37.07h19.16c1.33 0 2.45 0 3.37-.07a7.14 7.14 0 0 0 2.73-.7 7 7 0 0 0 3.06-3.05c.44-.87.6-1.78.69-2.73.07-.92.07-2.04.07-3.37V14.42c0-1.33 0-2.45-.07-3.37a7.14 7.14 0 0 0-.7-2.73 7 7 0 0 0-3.05-3.06 7.14 7.14 0 0 0-2.73-.69 44.6 44.6 0 0 0-3.37-.07ZM10.14 8.83c.2-.1.53-.21 1.24-.27.73-.06 1.69-.06 3.12-.06h19c1.43 0 2.39 0 3.12.06a3.3 3.3 0 0 1 1.24.27 3 3 0 0 1 1.31 1.3c.1.21.21.54.27 1.25.06.73.06 1.69.06 3.12v19c0 1.43 0 2.39-.06 3.12a3.3 3.3 0 0 1-.27 1.24 3 3 0 0 1-1.3 1.31c-.21.1-.54.21-1.25.27-.73.06-1.69.06-3.12.06h-19c-1.43 0-2.39 0-3.12-.06a3.3 3.3 0 0 1-1.24-.27 3 3 0 0 1-1.31-1.3c-.1-.21-.21-.54-.27-1.25-.06-.73-.06-1.69-.06-3.12v-19c0-1.43 0-2.39.06-3.12a3.3 3.3 0 0 1 .27-1.24 3 3 0 0 1 1.3-1.31Z' },
+                    { id: 'live', label: 'LIVE', auth: false, icon: 'M9 8a4 4 0 0 0-4 4v24a4 4 0 0 0 4 4h30a4 4 0 0 0 4-4V12a4 4 0 0 0-4-4H9ZM18 16.5a.5.5 0 0 1 .75-.43l14 9a.5.5 0 0 1 0 .86l-14 9a.5.5 0 0 1-.75-.43v-18Z' },
+                    { id: 'profile', label: 'Profile', auth: false, icon: 'M24.0003 7C20.1343 7 17.0003 10.134 17.0003 14C17.0003 17.866 20.1343 21 24.0003 21C27.8663 21 31.0003 17.866 31.0003 14C31.0003 10.134 27.8663 7 24.0003 7ZM13.0003 14C13.0003 7.92487 17.9252 3 24.0003 3C30.0755 3 35.0003 7.92487 35.0003 14C35.0003 20.0751 30.0755 25 24.0003 25C17.9252 25 13.0003 20.0751 13.0003 14ZM24.0003 33C18.0615 33 13.0493 36.9841 11.4972 42.4262C11.3457 42.9573 10.8217 43.3088 10.2804 43.1989L8.32038 42.8011C7.77914 42.6912 7.4266 42.1618 7.5683 41.628C9.49821 34.358 16.1215 29 24.0003 29C31.8792 29 38.5025 34.358 40.4324 41.628C40.5741 42.1618 40.2215 42.6912 39.6803 42.8011L37.7203 43.1989C37.179 43.3088 36.6549 42.9573 36.5035 42.4262C34.9514 36.9841 29.9391 33 24.0003 33Z' },
+                    { id: 'more', label: 'More', auth: false, icon: 'M5 24a4 4 0 1 1 8 0 4 4 0 0 1-8 0Zm15 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0Zm15 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z' },
+                ],
+                get visibleItems() {
+                    return this.menuItems.filter(i => !i.auth || this.isAuthenticated)
+                },
+                init() {
+                    if (this.darkMode) document.documentElement.classList.add('dark')
+                    this.$nextTick(function() {
+                        var vs = document.querySelectorAll('video')
+                        if (vs.length) vs[0].play()
+                    })
+                    this.$watch('currentIndex', function(index) {
+                        this.$nextTick(function() {
+                            var vs = document.querySelectorAll('video')
+                            vs.forEach(function(v, i) { i === index ? v.play() : v.pause() })
+                        })
+                    })
+                },
+                toggleTheme(targetDark) {
+                    this.darkMode = targetDark
+                    document.documentElement.classList.toggle('dark', targetDark)
+                    localStorage.setItem('darkMode', targetDark)
+                },
+                toast(msg) {
+                    this.toastMessage = msg
+                    this.showToast = true
+                    if (this.toastTimeout) clearTimeout(this.toastTimeout)
+                    this.toastTimeout = setTimeout(function() { this.showToast = false }.bind(this), 2000)
+                },
+                toggleLike(i) {
+                    var v = this.videos[i]
+                    if (!this.isAuthenticated) { this.showLoginModal = true; return }
+                    fetch('/post/' + v.id + '/like/', { method: 'POST', headers: { 'X-CSRFToken': this.csrfToken } })
+                        .then(r => r.json())
+                        .then(function(d) {
+                            setTimeout(function() {
+                                v.liked = d.liked
+                                v.likes = d.total_likes
+                            }, 500)
+                        }.bind(this))
+                    this.toast(v.liked ? 'Unliked' : 'Liked!')
+                },
+                openComments(i) {
+                    if (!this.isAuthenticated) { this.showLoginModal = true; return }
+                    var v = this.videos[i]
+                    if (!v) return
+                    this.showComments = true
+                    this.commentText = ''
+                    fetch('/post/' + v.id + '/comment/')
+                        .then(r => r.json())
+                        .then(d => {
+                            this.comments = d.comments.map(function(c) {
+                                c.showReplies = false
+                                c.showReply = false
+                                c.replyText = ''
+                                return c
+                            })
+                        })
+                },
+                toggleBookmark(i) {
+                    var v = this.videos[i]
+                    if (!this.isAuthenticated) { this.showLoginModal = true; return }
+                    fetch('/post/' + v.id + '/bookmark/', { method: 'POST', headers: { 'X-CSRFToken': this.csrfToken } })
+                        .then(r => r.json())
+                        .then(function(d) {
+                            setTimeout(function() {
+                                v.bookmarked = d.bookmarked
+                            }, 500)
+                        }.bind(this))
+                    this.toast(v.bookmarked ? 'Removed from favorites' : 'Added to favorites!')
+                },
+                fetchConversations() {
+                    fetch('/post/conversations/')
+                        .then(r => r.json())
+                        .then(d => { this.conversations = d.conversations })
+                },
+                fetchActivities() {
+                    var type = this.activityTab === 'all' ? '' : '?type=' + this.activityTab
+                    fetch('/post/activities/' + type)
+                        .then(r => r.json())
+                        .then(d => { this.activities = d.activities })
+                },
+                sendReply(conv) {
+                    if (!this.replyText.trim() || !this.isAuthenticated) return
+                    var text = this.replyText
+                    fetch('/post/' + conv.post_id + '/comment/', { method: 'POST', headers: { 'X-CSRFToken': this.csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'text=' + encodeURIComponent(text) })
+                        .then(r => r.json())
+                        .then(d => {
+                            if (d.success) {
+                                this.replyText = ''
+                                this.toast('Reply sent')
+                                this.fetchConversations()
+                            }
+                        })
+                },
+                likeConversation(conv) {
+                    if (!this.isAuthenticated) { this.showLoginModal = true; return }
+                    fetch('/post/comment/' + conv.comment_id + '/like/', { method: 'POST', headers: { 'X-CSRFToken': this.csrfToken } })
+                        .then(r => r.json())
+                        .then(d => { conv.liked = d.liked })
+                },
+                toggleCommentLike(c) {
+                    if (!this.isAuthenticated) { this.showLoginModal = true; return }
+                    fetch('/post/comment/' + c.id + '/like/', { method: 'POST', headers: { 'X-CSRFToken': this.csrfToken } })
+                        .then(r => r.json())
+                        .then(d => { c.liked = d.liked; c.likes = d.total_likes })
+                },
+
+                submitReply(c, el) {
+                    if (!c.replyText?.trim()) return
+                    var v = this.videos[this.currentIndex]
+                    if (!v) return
+                    fetch('/post/' + v.id + '/comment/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': this.csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'text=' + encodeURIComponent(c.replyText) + '&parent_id=' + c.id
+                    })
+                        .then(r => r.json())
+                        .then(function(d) {
+                            if (d.success) {
+                                v.comments++
+                                c.replies.push(d)
+                                c.reply_count = (c.reply_count || 0) + 1
+                                c.replyText = ''
+                                c.showReply = false
+                                c.showReplies = true
+                            }
+                        })
+                },
+                submitComment(i) {
+                    var v = this.videos[i]
+                    if (!this.isAuthenticated || !v) return
+                    if (!this.commentText.trim()) return
+                    fetch('/post/' + v.id + '/comment/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': this.csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'text=' + encodeURIComponent(this.commentText)
+                    })
+                        .then(r => r.json())
+                        .then(function(d) {
+                            if (d.success) {
+                                v.comments++
+                                d.showReplies = false
+                                d.showReply = false
+                                d.replyText = ''
+                                this.comments.unshift(d)
+                                this.commentText = ''
+                            }
+                        }.bind(this))
+                },
+            }
+        }
+    </script>
+</body>
+</html>

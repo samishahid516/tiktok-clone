@@ -1,0 +1,7 @@
+<div class="rounded-full overflow-hidden shrink-0 flex items-center justify-center {{ extra_class }}" style="width:{{ size }};height:{{ size }}">
+    {% if image_url %}
+        <img src="{{ image_url }}" class="w-full h-full object-cover">
+    {% else %}
+        <span class="font-bold text-neutral-400 dark:text-neutral-500 {{ text_class|default:'' }}">{{ initial }}</span>
+    {% endif %}
+</div>

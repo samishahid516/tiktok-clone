@@ -1,0 +1,122 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign up | TikTok</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+    <link rel="stylesheet" href="{% static 'src/output.css' %}">
+    <script defer src="{% static 'src/alpine.min.js' %}"></script>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        body { display: grid; grid-template-rows: auto 1fr auto; }
+        main { display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 16px 0; }
+        main::-webkit-scrollbar { width: 6px; }
+        main::-webkit-scrollbar-track { background: transparent; }
+        main::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        main::-webkit-scrollbar-thumb:hover { background: #aaa; }
+    </style>
+</head>
+<body>
+    <header class="sticky top-0 z-10 bg-white">
+        <div class="flex items-center justify-between px-4 py-2">
+            <a href="{% url 'index' %}">
+                <img src="{% static 'tiktok.png' %}" class="h-9">
+            </a>
+            <a href="" class="text-neutral-500 hover:text-black hover:underline flex items-center gap-1 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Feedback and help
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <div class="w-full max-w-sm mx-auto px-6">
+            {% if show_code_input %}
+            <div x-data="{ timer: 60, canResend: false, interval: null, init() { this.startTimer() }, startTimer() { this.interval = setInterval(() => { this.timer--; if (this.timer <= 0) { clearInterval(this.interval); this.canResend = true; this.autoResend() } }, 1000) }, autoResend() { const form = this.$refs.autoForm; const data = new FormData(form); data.append('ajax', '1'); fetch(form.action, { method: 'POST', body: data }).then(r => r.json()).then(resp => { if (resp.success) { this.timer = 60; this.canResend = false; this.startTimer() } }) }, manualResend() { if (!this.canResend) return; const form = this.$refs.autoForm; const data = new FormData(form); data.append('ajax', '1'); fetch(form.action, { method: 'POST', body: data }).then(r => r.json()).then(resp => { if (resp.success) { this.timer = 60; this.canResend = false; this.startTimer() } }) } }">
+                <h1 class="text-2xl font-bold text-center mb-1 text-black">Enter verification code</h1>
+                <p class="text-sm text-neutral-500 text-center mb-2">A 6-digit code was sent to <strong>{{ email }}</strong></p>
+                <p class="text-sm text-neutral-400 text-center mb-4">
+                    Resend code in <span x-text="timer" class="font-semibold text-black"></span>s
+                </p>
+
+                <form x-ref="autoForm" method="POST" action="{% url 'signup' %}" class="hidden">
+                    {% csrf_token %}
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <input type="hidden" name="resend" value="1">
+                </form>
+
+                {% if error %}
+                    <p class="text-red-500 text-sm text-center mb-3">{{ error }}</p>
+                {% endif %}
+                {% if success %}
+                    <p class="text-green-600 text-sm text-center mb-3" x-text="'{{ success|escapejs }}'"></p>
+                {% endif %}
+
+                <form method="POST" action="{% url 'signup' %}" class="flex flex-col gap-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <input type="hidden" name="username" value="">
+                    <input type="hidden" name="password" value="">
+                    <div>
+                        <input type="text" name="code" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required
+                               class="w-full p-3.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:border-black text-center text-2xl tracking-[8px]">
+                    </div>
+                    <button type="submit" class="w-full p-3.5 rounded-lg font-semibold text-sm bg-rose-500 text-white cursor-pointer hover:bg-rose-600 transition-colors">Verify & Log in</button>
+                </form>
+
+                <div class="mt-3 text-center">
+                    <template x-if="!canResend">
+                        <span class="text-sm text-neutral-300 cursor-not-allowed">Resend code</span>
+                    </template>
+                    <template x-if="canResend">
+                        <button @click="manualResend" class="text-sm text-rose-500 font-medium hover:underline cursor-pointer bg-transparent border-none">Resend code</button>
+                    </template>
+                </div>
+
+
+            </div>
+            {% else %}
+                <h1 class="text-2xl font-bold text-center mb-4 text-black">Sign up</h1>
+
+                {% if error %}
+                    <p class="text-red-500 text-sm mb-3">{{ error }}</p>
+                {% endif %}
+
+                <form method="POST" action="{% url 'signup' %}" class="flex flex-col gap-3">
+                    {% csrf_token %}
+
+                    <p class="text-sm text-black font-medium -mb-1">Username</p>
+                    <div>
+                        <input type="text" name="username" placeholder="Username" class="w-full p-3.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:border-black">
+                    </div>
+
+                    <p class="text-sm text-black font-medium -mb-1">Email</p>
+                    <div>
+                        <input type="email" name="email" placeholder="Email address" class="w-full p-3.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:border-black">
+                    </div>
+
+                    <p class="text-sm text-black font-medium -mb-1">Password</p>
+                    <div>
+                        <input type="password" name="password" placeholder="Password" class="w-full p-3.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:border-black">
+                    </div>
+
+                    <button type="submit" class="w-full p-3.5 rounded-lg font-semibold text-sm bg-rose-500 text-white cursor-pointer hover:bg-rose-600 transition-colors">Sign up</button>
+                    <a href="{% url 'index' %}" class="text-center text-sm text-black hover:underline">&lt; Go back</a>
+                    <p class="text-xs text-neutral-400 text-center">By continuing, you agree to TikTok's <a href="" class="text-black font-medium hover:underline">Terms of Service</a> and acknowledge that you have read the <a href="" class="text-black font-medium hover:underline">Privacy Policy</a>.</p>
+                </form>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="text-center text-xs text-neutral-400 border-t border-neutral-300 px-4 py-6">
+            <p>Already have an account? <a href="{% url 'login' %}" class="text-rose-500 font-semibold hover:underline">Log in</a></p>
+        </div>
+        <div class="bg-black text-center text-neutral-400 flex items-center justify-center text-xs h-8">
+            <p>&copy; 2026 TikTok</p>
+        </div>
+    </footer>
+</body>
+</html>
