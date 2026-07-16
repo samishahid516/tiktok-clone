@@ -99,9 +99,15 @@
                         </h2>
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                             <template x-for="post in posts" :key="post.id">
-                                <a :href="'/post/' + post.id + '/'" class="relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden cursor-pointer group aspect-[9/16]">
+                                <a :href="'/post/' + post.id + '/'" class="relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden cursor-pointer group aspect-[9/16]" x-data="{ vpaused: false }">
                                     <template x-if="post.has_video && post.video_url">
-                                        <video :src="post.video_url" class="absolute inset-0 w-full h-full object-cover" loop muted playsinline @mouseenter="$el.play()" @mouseleave="$el.pause(); $el.currentTime = 0"></video>
+                                        <div class="absolute inset-0">
+                                            <audio :src="post.soundtrack_url" loop preload="auto" x-show="post.soundtrack_url" x-ref="saudio"></audio>
+                                            <video :src="post.video_url" class="absolute inset-0 w-full h-full object-cover" loop muted playsinline @mouseenter="vpaused = false; $el.play()" @mouseleave="$el.pause(); $el.currentTime = 0; vpaused = true" @play="vpaused = false" @pause="vpaused = true"></video>
+                                            <div x-show="vpaused" class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                                                <svg class="w-10 h-10 text-white/80" fill="currentColor" viewBox="0 0 48 48"><path d="M24 44c11.05 0 20-8.95 20-20S35.05 4 24 4 4 12.95 4 24s8.95 20 20 20Zm-3.5-12.38a1.5 1.5 0 0 1-2.5-1.13v-12.98a1.5 1.5 0 0 1 2.5-1.13l9.04 6.5a1.5 1.5 0 0 1 0 2.26l-9.04 6.48Z"/></svg>
+                                            </div>
+                                        </div>
                                     </template>
                                     <template x-if="!post.has_video && post.image_url">
                                         <img :src="post.image_url" class="absolute inset-0 w-full h-full object-cover">

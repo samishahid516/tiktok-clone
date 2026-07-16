@@ -5,6 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.conf import settings
+from django.utils import timezone
+from datetime import datetime
+from django.contrib.auth.models import User
 from .models import Post, Video, Image, Soundtrack, Like, Comment, CommentLike, Bookmark
 from .forms import PostForm, CommentForm
 from core.models import Activity
@@ -22,7 +25,32 @@ def upload(request):
         if form.is_valid():
             post = form.save(commit=False)
             post.user = request.user
+            post.privacy = request.POST.get('privacy', 'everyone')
+
+            schedule_val = request.POST.get('schedule', 'now')
+            if schedule_val == 'later':
+                date_val = request.POST.get('schedule_date', '')
+                time_val = request.POST.get('schedule_time', '')
+                if date_val and time_val:
+                    post.scheduled_at = timezone.make_aware(datetime.strptime(f'{date_val} {time_val}', '%Y-%m-%d %H:%M'))
             post.save()
+
+            mention_names = request.POST.get('mention', '').strip()
+            if mention_names:
+                for name in mention_names.split(','):
+                    name = name.strip().lstrip('@')
+                    try:
+                        u = User.objects.get(username=name)
+                        post.mentioned_users.add(u)
+                        Activity.objects.create(
+                            user=u,
+                            actor=request.user,
+                            activity_type=Activity.MENTION,
+                            post=post,
+                            text=f'{request.user.username} mentioned you in a post.'
+                        )
+                    except User.DoesNotExist:
+                        pass
 
             media_file = request.FILES.get('media')
             if media_file:
@@ -54,11 +82,21 @@ def post_detail(request, post_id):
     likers = post.like_set.select_related('user').all()
     next_post = Post.objects.filter(id__gt=post_id).order_by('id').first()
     prev_post = Post.objects.filter(id__lt=post_id).order_by('-id').first()
+    soundtrack_url = None
+    if post.soundtrack and post.soundtrack.title:
+        import os
+        from django.conf import settings
+        path = os.path.join(settings.MEDIA_ROOT, 'sound_tracks', post.soundtrack.title)
+        if os.path.exists(path):
+            soundtrack_url = settings.MEDIA_URL + 'sound_tracks/' + post.soundtrack.title
+    mentioned = post.mentioned_users.all()
     return render(request, 'post/detail.html', {
         'post': post,
         'likers': likers,
         'next_post_id': next_post.id if next_post else None,
         'prev_post_id': prev_post.id if prev_post else None,
+        'soundtrack_url': soundtrack_url,
+        'mentioned_users': mentioned,
     })
 
 

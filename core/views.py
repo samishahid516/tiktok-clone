@@ -27,7 +27,19 @@ def index(request):
     return render(request, 'user/index.html')
 
 def home(request):
-    posts = Post.objects.select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').all().order_by('?')
+    if request.user.is_authenticated:
+        followed_ids = set(request.user.following.values_list('user_id', flat=True))
+        friend_ids = set()
+        for pf in request.user.following.all():
+            if request.user in pf.followers.all():
+                friend_ids.add(pf.user_id)
+        posts = Post.objects.select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').filter(
+            Q(privacy='everyone') |
+            Q(privacy='only_me', user=request.user) |
+            Q(privacy='friends', user__in=friend_ids)
+        ).order_by('?')
+    else:
+        posts = Post.objects.filter(privacy='everyone').select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').order_by('?')
 
     posts_data = []
     for post in posts:
@@ -38,6 +50,10 @@ def home(request):
         if request.user.is_authenticated:
             liked = post.like_set.filter(user=request.user).exists()
             bookmarked = post.bookmark_set.filter(user=request.user).exists()
+
+        soundtrack_url = None
+        if post.soundtrack:
+            soundtrack_url = settings.MEDIA_URL + 'sound_tracks/' + post.soundtrack.title
 
         posts_data.append({
             'id': post.id,
@@ -52,6 +68,7 @@ def home(request):
             'video_url': video.file.url if video else None,
             'image_url': image.file.url if image else None,
             'has_video': bool(video),
+            'soundtrack_url': soundtrack_url,
         })
 
     return render(request, 'user/home.html', {'posts_json': json.dumps(posts_data)})
@@ -245,7 +262,18 @@ def following_page(request):
 def explore(request):
     query = request.GET.get('q', '')
     hashtag = request.GET.get('hashtag', '')
-    posts = Post.objects.select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').all().order_by('?')
+    if request.user.is_authenticated:
+        followed_ids = set(request.user.following.values_list('user_id', flat=True))
+        friend_ids = set()
+        for pf in request.user.following.all():
+            if request.user in pf.followers.all():
+                friend_ids.add(pf.user_id)
+        posts = Post.objects.select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').filter(
+            Q(privacy='everyone') |
+            Q(privacy='friends', user__in=friend_ids)
+        ).order_by('?')
+    else:
+        posts = Post.objects.filter(privacy='everyone').select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').order_by('?')
     users = User.objects.none()
     if query:
         posts = posts.filter(Q(caption__icontains=query) | Q(hashtags__icontains=query))
@@ -259,6 +287,9 @@ def explore(request):
         if request.user.is_authenticated:
             liked = post.like_set.filter(user=request.user).exists()
             bookmarked = post.bookmark_set.filter(user=request.user).exists()
+        soundtrack_url = None
+        if post.soundtrack:
+            soundtrack_url = settings.MEDIA_URL + 'sound_tracks/' + post.soundtrack.title
         posts_data.append({
             'id': post.id,
             'user': post.user.username,
@@ -269,6 +300,7 @@ def explore(request):
             'video_url': post.video.file.url if post.video else None,
             'image_url': post.image.file.url if post.image else None,
             'has_video': bool(post.video),
+            'soundtrack_url': soundtrack_url,
         })
     users_data = []
     for u in users:
@@ -339,6 +371,9 @@ def friends(request):
             avatar = post.user.profile.profile_picture.url if post.user.profile.profile_picture else None
         except ObjectDoesNotExist:
             avatar = None
+        soundtrack_url = None
+        if post.soundtrack:
+            soundtrack_url = settings.MEDIA_URL + 'sound_tracks/' + post.soundtrack.title
         posts_data.append({
             'id': post.id,
             'user': post.user.username,
@@ -351,6 +386,7 @@ def friends(request):
             'video_url': post.video.file.url if post.video else None,
             'image_url': post.image.file.url if post.image else None,
             'has_video': bool(post.video),
+            'soundtrack_url': soundtrack_url,
         })
     suggested_users = User.objects.exclude(id__in=followed_ids).exclude(id=request.user.id).exclude(is_superuser=True).select_related('profile')[:10]
     suggested = []
@@ -370,21 +406,43 @@ def friends(request):
         })
         u_posts = u.posts.select_related('video', 'image').all().order_by('-created_at')[:3]
         for p in u_posts:
+            su_avatar = None
+            try:
+                su_avatar = u.profile.profile_picture.url if u.profile.profile_picture else None
+            except ObjectDoesNotExist:
+                pass
+            s_soundtrack_url = None
+            if p.soundtrack:
+                s_soundtrack_url = settings.MEDIA_URL + 'sound_tracks/' + p.soundtrack.title
             suggested_posts_data.append({
                 'id': p.id,
                 'user': u.username,
-                'user_avatar': avatar,
+                'user_avatar': su_avatar,
                 'likes': p.like_set.count(),
                 'comments': p.comment_set.count(),
                 'video_url': p.video.file.url if p.video else None,
                 'image_url': p.image.file.url if p.image else None,
                 'has_video': bool(p.video),
+                'soundtrack_url': s_soundtrack_url,
             })
     return render(request, 'user/friends.html', {
         'posts_json': json.dumps(posts_data),
         'suggested': suggested,
         'suggested_posts_json': json.dumps(suggested_posts_data),
     })
+
+def search_users(request):
+    q = request.GET.get('q', '')
+    users = User.objects.filter(is_superuser=False, username__icontains=q).exclude(id=request.user.id if request.user.is_authenticated else None)[:8]
+    data = []
+    for u in users:
+        avatar = None
+        try:
+            avatar = u.profile.profile_picture.url if u.profile.profile_picture else None
+        except ObjectDoesNotExist:
+            pass
+        data.append({'username': u.username, 'avatar': avatar})
+    return JsonResponse({'users': data})
 
 def user_profile(request, username):
     profile_user = get_object_or_404(User, username=username, is_superuser=False)

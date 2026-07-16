@@ -92,6 +92,9 @@ class Post(models.Model):
     bookmarks = models.ManyToManyField(User, through=Bookmark, related_name='bookmarked_posts', blank=True)
     caption = models.TextField(blank=True)
     hashtags = models.CharField(max_length=200, blank=True)
+    privacy = models.CharField(max_length=20, choices=[('everyone', 'Everyone'), ('only_me', 'Only me'), ('friends', 'Only friends and me')], default='everyone')
+    scheduled_at = models.DateTimeField(null=True, blank=True)
+    mentioned_users = models.ManyToManyField(User, related_name='mentioned_posts', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

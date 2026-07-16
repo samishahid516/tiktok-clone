@@ -198,9 +198,15 @@
                         {% if posts %}
                             <div class="grid grid-cols-3 gap-2">
                                 {% for post in posts %}
-                                    <a href="{% url 'post_detail' post.id %}" class="aspect-[9/16] bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden relative group">
+                                    <a href="{% url 'post_detail' post.id %}" class="aspect-[9/16] bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden relative group" x-data="{ vpaused: false }">
                                         {% if post.video %}
-                                            <video src="{{ post.video.file.url }}" class="w-full h-full object-cover" muted onmouseenter="this.play()" onmouseleave="this.pause()"></video>
+                                            <div class="absolute inset-0">
+                                                <audio src="{{ MEDIA_URL }}sound_tracks/{{ post.soundtrack.title }}" loop preload="auto" x-ref="saudio" x-show="'{{ post.soundtrack.title }}' !== ''"></audio>
+                                                <video src="{{ post.video.file.url }}" class="absolute inset-0 w-full h-full object-cover" loop muted playsinline @mouseenter="vpaused = false; $el.play()" @mouseleave="$el.pause(); $el.currentTime = 0; vpaused = true" @play="vpaused = false" @pause="vpaused = true"></video>
+                                                <div x-show="vpaused" class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                                                    <svg class="w-10 h-10 text-white/80" fill="currentColor" viewBox="0 0 48 48"><path d="M24 44c11.05 0 20-8.95 20-20S35.05 4 24 4 4 12.95 4 24s8.95 20 20 20Zm-3.5-12.38a1.5 1.5 0 0 1-2.5-1.13v-12.98a1.5 1.5 0 0 1 2.5-1.13l9.04 6.5a1.5 1.5 0 0 1 0 2.26l-9.04 6.48Z"/></svg>
+                                                </div>
+                                            </div>
                                         {% elif post.image %}
                                             <img src="{{ post.image.file.url }}" class="w-full h-full object-cover">
                                         {% endif %}
@@ -230,9 +236,15 @@
                         {% if bookmarked_posts %}
                             <div class="grid grid-cols-3 gap-2">
                                 {% for post in bookmarked_posts %}
-                                    <a href="{% url 'post_detail' post.id %}" class="aspect-[9/16] bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden relative group">
+                                    <a href="{% url 'post_detail' post.id %}" class="aspect-[9/16] bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden relative group" x-data="{ vpaused: false }">
                                         {% if post.video %}
-                                            <video src="{{ post.video.file.url }}" class="w-full h-full object-cover" muted onmouseenter="this.play()" onmouseleave="this.pause()"></video>
+                                            <div class="absolute inset-0">
+                                                <audio src="{{ MEDIA_URL }}sound_tracks/{{ post.soundtrack.title }}" loop preload="auto" x-ref="saudio" x-show="'{{ post.soundtrack.title }}' !== ''"></audio>
+                                                <video src="{{ post.video.file.url }}" class="absolute inset-0 w-full h-full object-cover" loop muted playsinline @mouseenter="vpaused = false; $el.play()" @mouseleave="$el.pause(); $el.currentTime = 0; vpaused = true" @play="vpaused = false" @pause="vpaused = true"></video>
+                                                <div x-show="vpaused" class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                                                    <svg class="w-10 h-10 text-white/80" fill="currentColor" viewBox="0 0 48 48"><path d="M24 44c11.05 0 20-8.95 20-20S35.05 4 24 4 4 12.95 4 24s8.95 20 20 20Zm-3.5-12.38a1.5 1.5 0 0 1-2.5-1.13v-12.98a1.5 1.5 0 0 1 2.5-1.13l9.04 6.5a1.5 1.5 0 0 1 0 2.26l-9.04 6.48Z"/></svg>
+                                                </div>
+                                            </div>
                                         {% elif post.image %}
                                             <img src="{{ post.image.file.url }}" class="w-full h-full object-cover">
                                         {% endif %}
@@ -262,9 +274,15 @@
                         {% if liked_posts %}
                             <div class="grid grid-cols-3 gap-2">
                                 {% for post in liked_posts %}
-                                    <a href="{% url 'post_detail' post.id %}" class="aspect-[9/16] bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden relative group">
+                                    <a href="{% url 'post_detail' post.id %}" class="aspect-[9/16] bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden relative group" x-data="{ vpaused: false }">
                                         {% if post.video %}
-                                            <video src="{{ post.video.file.url }}" class="w-full h-full object-cover" muted onmouseenter="this.play()" onmouseleave="this.pause()"></video>
+                                            <div class="absolute inset-0">
+                                                <audio src="{{ MEDIA_URL }}sound_tracks/{{ post.soundtrack.title }}" loop preload="auto" x-ref="saudio" x-show="'{{ post.soundtrack.title }}' !== ''"></audio>
+                                                <video src="{{ post.video.file.url }}" class="absolute inset-0 w-full h-full object-cover" loop muted playsinline @mouseenter="vpaused = false; $el.play()" @mouseleave="$el.pause(); $el.currentTime = 0; vpaused = true" @play="vpaused = false" @pause="vpaused = true"></video>
+                                                <div x-show="vpaused" class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                                                    <svg class="w-10 h-10 text-white/80" fill="currentColor" viewBox="0 0 48 48"><path d="M24 44c11.05 0 20-8.95 20-20S35.05 4 24 4 4 12.95 4 24s8.95 20 20 20Zm-3.5-12.38a1.5 1.5 0 0 1-2.5-1.13v-12.98a1.5 1.5 0 0 1 2.5-1.13l9.04 6.5a1.5 1.5 0 0 1 0 2.26l-9.04 6.48Z"/></svg>
+                                                </div>
+                                            </div>
                                         {% elif post.image %}
                                             <img src="{{ post.image.file.url }}" class="w-full h-full object-cover">
                                         {% endif %}

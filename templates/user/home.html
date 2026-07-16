@@ -279,9 +279,15 @@
                          :style="`transform: translateY(-${currentIndex * 100}%)`">
                         <template x-for="(video, i) in videos" :key="i">
                             <div class="w-full h-full shrink-0 flex items-center justify-center">
-                                <div class="aspect-[9/16] h-full max-h-[calc(100vh-10px)] min-w-[300px] bg-neutral-950 rounded-2xl overflow-hidden relative group cursor-pointer">
+                                <div class="aspect-[9/16] h-full max-h-[calc(100vh-10px)] min-w-[300px] bg-neutral-950 rounded-2xl overflow-hidden relative group cursor-pointer" x-data="{ vpaused: false }">
                                     <template x-if="video.has_video && video.video_url">
-                                        <video :src="video.video_url" class="absolute inset-0 w-full h-full object-cover rounded-2xl" loop muted playsinline autoplay @click="$el.paused ? $el.play() : $el.pause()"></video>
+                                        <div class="absolute inset-0">
+                                            <audio :src="video.soundtrack_url" loop preload="auto" x-ref="saudio" x-show="video.soundtrack_url"></audio>
+                                            <video :src="video.video_url" class="absolute inset-0 w-full h-full object-cover rounded-2xl" controls loop muted playsinline autoplay @play="vpaused = false; var a = $el.parentElement.querySelector('audio'); if (a) { a.volume = 0.3; a.play() }" @pause="vpaused = true; var a = $el.parentElement.querySelector('audio'); if (a) a.pause()"></video>
+                                            <div x-show="vpaused" class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                                                <svg class="w-16 h-16 text-white/80" fill="currentColor" viewBox="0 0 48 48"><path d="M24 44c11.05 0 20-8.95 20-20S35.05 4 24 4 4 12.95 4 24s8.95 20 20 20Zm-3.5-12.38a1.5 1.5 0 0 1-2.5-1.13v-12.98a1.5 1.5 0 0 1 2.5-1.13l9.04 6.5a1.5 1.5 0 0 1 0 2.26l-9.04 6.48Z"/></svg>
+                                            </div>
+                                        </div>
                                     </template>
                                     <template x-if="!video.has_video && video.image_url">
                                         <img :src="video.image_url" class="absolute inset-0 w-full h-full object-cover rounded-2xl">
