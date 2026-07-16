@@ -16,8 +16,8 @@
 </head>
 <body>
     <form method="post" class="hidden">{% csrf_token %}</form>
-    <script id="activity-data" type="application/json">{{ activity_json|safe }}</script>
     <script id="friends-posts-data" type="application/json">{{ posts_json|safe }}</script>
+    <script id="suggested-posts-data" type="application/json">{{ suggested_posts_json|safe }}</script>
     <div x-data="friendsPage()" class="flex h-screen bg-white dark:bg-black">
         {% include "components/sidebar.html" with sidebarCond="showMorePanel" nav_extra_handlers="" nav_exclude="" %}
         {% include "components/more_panel.html" %}
@@ -27,69 +27,10 @@
             <div class="max-w-4xl mx-auto px-4 py-6">
                 <h1 class="text-xl font-bold dark:text-white mb-6">Friends</h1>
 
-                <!-- Activity Feed -->
-                <template x-if="activities.length">
-                    <div class="mb-8">
-                        <h2 class="text-base font-semibold dark:text-white mb-3 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M6.5 2C4.47 2 2.5 3.72 2.5 5.5c0 1.42 1.18 2.5 2.5 2.5s2.5-1.08 2.5-2.5C7.5 3.72 6.53 2 6.5 2zm11 0c-1.97 0-3.5 1.72-3.5 3.5 0 1.42 1.53 2.5 3.5 2.5s3.5-1.08 3.5-2.5C21 3.72 19.47 2 18.5 2zm-11 6c-2.76 0-5 2.24-5 5v1h2v-1c0-1.66 1.34-3 3-3h7c1.66 0 3 1.34 3 3v1h2v-1c0-2.76-2.24-5-5-5h-7zm0 2a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm11 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
-                            Recent Activity
-                        </h2>
-                        <div class="space-y-1">
-                            <template x-for="a in activities" :key="a.id">
-                                <a :href="a.post_id ? '/post/' + a.post_id + '/' : '#'" class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition-colors">
-                                    <div class="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-sm font-bold shrink-0 dark:text-white" x-text="a.actor.charAt(0).toUpperCase()"></div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm dark:text-white" x-text="a.text"></p>
-                                        <p class="text-xs text-neutral-400 mt-0.5" x-text="formatTime(a.time)"></p>
-                                    </div>
-                                    <span class="text-xs px-2 py-0.5 rounded-full font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 uppercase" x-text="a.type"></span>
-                                </a>
-                            </template>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Suggested Users -->
-                {% if suggested %}
-                <div class="mb-8">
-                    <h2 class="text-base font-semibold dark:text-white mb-3 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                        Suggested for you
-                    </h2>
-                    <div class="space-y-1">
-                        {% for user in suggested %}
-                        <div class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition-colors" x-data="{ following: false }">
-                            <a href="{% url 'user_profile' user.username %}" class="shrink-0">
-                                <div class="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden flex items-center justify-center text-base font-bold text-neutral-500 dark:text-neutral-400">
-                                    {% if user.avatar %}
-                                    <img src="{{ user.avatar }}" class="w-full h-full object-cover">
-                                    {% else %}
-                                    <span class="text-sm font-semibold">{{ user.username|first|upper }}</span>
-                                    {% endif %}
-                                </div>
-                            </a>
-                            <div class="flex-1 min-w-0">
-                                <a href="{% url 'user_profile' user.username %}" class="text-sm font-semibold dark:text-white hover:underline truncate block">{{ user.username }}</a>
-                                <p class="text-xs text-neutral-400 truncate">{{ user.handle }}</p>
-                                {% if user.bio %}
-                                <p class="text-xs text-neutral-500 mt-0.5 line-clamp-1">{{ user.bio }}</p>
-                                {% endif %}
-                            </div>
-                            <button @click="followUser('{{ user.username }}', $el)" class="shrink-0 px-5 py-1.5 text-sm font-semibold rounded-full transition-colors" :class="following ? 'bg-neutral-100 dark:bg-neutral-700 text-black dark:text-white hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 border border-neutral-300 dark:border-neutral-600' : 'bg-rose-500 text-white hover:bg-rose-600'" x-text="following ? 'Following' : 'Follow'"></button>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
                 <!-- Friends' Posts -->
                 <template x-if="posts.length">
-                    <div>
-                        <h2 class="text-base font-semibold dark:text-white mb-3 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M10 8v8l5-4-5-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
-                            From friends
-                        </h2>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    <div class="mb-10">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                             <template x-for="post in posts" :key="post.id">
                                 <a :href="'/post/' + post.id + '/'" class="relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden cursor-pointer group aspect-[9/16]">
                                     <template x-if="post.has_video && post.video_url">
@@ -105,17 +46,85 @@
                                             <span x-text="post.likes"></span>
                                         </span>
                                     </div>
+                                    <div class="absolute bottom-2 right-2 z-10">
+                                        <a :href="'/@' + post.user + '/'" class="block w-7 h-7 rounded-full border-2 border-white overflow-hidden bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                                            <template x-if="post.user_avatar">
+                                                <img :src="post.user_avatar" class="w-full h-full object-cover">
+                                            </template>
+                                            <template x-if="!post.user_avatar">
+                                                <span x-text="post.user.charAt(0).toUpperCase()"></span>
+                                            </template>
+                                        </a>
+                                    </div>
                                 </a>
                             </template>
                         </div>
                     </div>
                 </template>
 
-                <template x-if="!activities.length && !posts.length">
+                <!-- Suggested Users Videos -->
+                {% if suggested %}
+                <div>
+                    <h2 class="text-base font-semibold dark:text-white mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        Suggested for you
+                    </h2>
+                    {% for user in suggested %}
+                    <div class="mb-6" x-data="{ following: false }">
+                        <div class="flex items-center gap-3 mb-3">
+                            <a href="{% url 'user_profile' user.username %}" class="flex items-center gap-3 flex-1 min-w-0">
+                                <div class="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden flex items-center justify-center text-sm font-bold shrink-0 text-neutral-500 dark:text-neutral-400">
+                                    {% if user.avatar %}
+                                    <img src="{{ user.avatar }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                    <span class="text-sm font-semibold">{{ user.username|first|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <span class="text-sm font-semibold dark:text-white hover:underline truncate">{{ user.username }}</span>
+                            </a>
+                            <button @click="followUser('{{ user.username }}', $el)" class="shrink-0 px-5 py-1.5 text-sm font-semibold rounded-full transition-colors" :class="following ? 'bg-neutral-100 dark:bg-neutral-700 text-black dark:text-white hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 border border-neutral-300 dark:border-neutral-600' : 'bg-rose-500 text-white hover:bg-rose-600'" x-text="following ? 'Following' : 'Follow'"></button>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                            <template x-for="sp in suggestedPosts" :key="sp.id">
+                                <template x-if="sp.user === '{{ user.username }}'">
+                                    <a :href="'/post/' + sp.id + '/'" class="relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden cursor-pointer group aspect-[9/16]">
+                                        <template x-if="sp.has_video && sp.video_url">
+                                            <video :src="sp.video_url" class="absolute inset-0 w-full h-full object-cover" loop muted playsinline @mouseenter="$el.play()" @mouseleave="$el.pause(); $el.currentTime = 0"></video>
+                                        </template>
+                                        <template x-if="!sp.has_video && sp.image_url">
+                                            <img :src="sp.image_url" class="absolute inset-0 w-full h-full object-cover">
+                                        </template>
+                                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                                        <div class="absolute bottom-2 left-2 right-2 flex items-center gap-2 text-white text-xs z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span class="flex items-center gap-1 bg-black/50 px-2 py-0.5 rounded">
+                                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                                <span x-text="sp.likes"></span>
+                                            </span>
+                                        </div>
+                                        <div class="absolute bottom-2 right-2 z-10">
+                                            <a :href="'/@' + sp.user + '/'" class="block w-7 h-7 rounded-full border-2 border-white overflow-hidden bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                                                <template x-if="sp.user_avatar">
+                                                    <img :src="sp.user_avatar" class="w-full h-full object-cover">
+                                                </template>
+                                                <template x-if="!sp.user_avatar">
+                                                    <span x-text="sp.user.charAt(0).toUpperCase()"></span>
+                                                </template>
+                                            </a>
+                                        </div>
+                                    </a>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <template x-if="!posts.length">
                     <div class="text-center py-20">
                         <svg class="w-20 h-20 text-neutral-300 dark:text-neutral-600 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
                         <p class="text-lg font-semibold dark:text-white">No friends activity yet</p>
-                        <p class="text-sm text-neutral-400 mt-2">Follow some users to see their activity and posts here.</p>
+                        <p class="text-sm text-neutral-400 mt-2">Follow some users to see their posts here.</p>
                         <a href="{% url 'explore' %}" class="inline-block mt-4 px-6 py-2 bg-rose-500 text-white font-semibold text-sm rounded-full hover:bg-rose-600 transition-colors">Explore users</a>
                     </div>
                 </template>
@@ -125,9 +134,9 @@
 
     <script>
         function friendsPage() {
-            var posts = [], activities = [];
+            var posts = [], suggestedPosts = [];
             try { posts = JSON.parse(document.getElementById('friends-posts-data').textContent || '[]') } catch(e) { console.error(e) }
-            try { activities = JSON.parse(document.getElementById('activity-data').textContent || '[]') } catch(e) { console.error(e) }
+            try { suggestedPosts = JSON.parse(document.getElementById('suggested-posts-data').textContent || '[]') } catch(e) { console.error(e) }
             var isAuth = {{ user.is_authenticated|lower }};
             var menuItems = [
                 { id: 'for-you', label: 'For You', auth: false, icon: 'M24.9505 7.84001C24.3975 7.38666 23.6014 7.38666 23.0485 7.84003L6.94846 21.04C6.45839 21.4418 6.2737 22.1083 6.48706 22.705C6.70041 23.3017 7.26576 23.7 7.89949 23.7H10.2311L11.4232 36.7278C11.5409 38.0149 12.6203 39 13.9128 39H21.5C22.0523 39 22.5 38.5523 22.5 38V28.3153C22.5 27.763 22.9477 27.3153 23.5 27.3153H24.5C25.0523 27.3153 25.5 27.763 25.5 28.3153V38C25.5 38.5523 25.9477 39 26.5 39H34.0874C35.3798 39 36.4592 38.0149 36.577 36.7278L37.7691 23.7H40.1001C40.7338 23.7 41.2992 23.3017 41.5125 22.705C41.7259 22.1082 41.5412 21.4418 41.0511 21.04L24.9505 7.84001Z' },
@@ -144,7 +153,7 @@
             var visibleItems = menuItems.filter(function(i) { return !i.auth || isAuth });
             return {
                 posts: posts,
-                activities: activities,
+                suggestedPosts: suggestedPosts,
                 activeNav: 'friends',
                 showMorePanel: false,
                 showThemeOptions: false,

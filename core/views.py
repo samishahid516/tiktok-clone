@@ -324,16 +324,25 @@ def explore(request):
 
 @login_required(login_url='index')
 def friends(request):
-    followed_ids = request.user.following.values_list('user_id', flat=True)
-    friends_posts = Post.objects.filter(user_id__in=followed_ids).select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').order_by('-created_at')
-    friends_activity = Activity.objects.filter(user_id__in=followed_ids).select_related('actor', 'post').order_by('-created_at')[:30]
+    followed_profiles = request.user.following.all()
+    followed_ids = set(followed_profiles.values_list('user_id', flat=True))
+    friend_ids = set()
+    for pf in followed_profiles:
+        if request.user in pf.followers.all():
+            friend_ids.add(pf.user_id)
+    friends_posts = Post.objects.filter(user_id__in=friend_ids).select_related('video', 'image', 'user__profile').prefetch_related('like_set', 'comment_set', 'user').order_by('-created_at')
     posts_data = []
     for post in friends_posts:
         liked = post.like_set.filter(user=request.user).exists()
         bookmarked = post.bookmark_set.filter(user=request.user).exists()
+        try:
+            avatar = post.user.profile.profile_picture.url if post.user.profile.profile_picture else None
+        except ObjectDoesNotExist:
+            avatar = None
         posts_data.append({
             'id': post.id,
             'user': post.user.username,
+            'user_avatar': avatar,
             'desc': post.caption,
             'likes': post.like_set.count(),
             'comments': post.comment_set.count(),
@@ -343,34 +352,38 @@ def friends(request):
             'image_url': post.image.file.url if post.image else None,
             'has_video': bool(post.video),
         })
-    activity_data = []
-    for a in friends_activity:
-        activity_data.append({
-            'id': a.id,
-            'actor': a.actor.username,
-            'type': a.activity_type,
-            'text': a.text,
-            'time': a.created_at.isoformat(),
-            'post_id': a.post_id,
-        })
     suggested_users = User.objects.exclude(id__in=followed_ids).exclude(id=request.user.id).exclude(is_superuser=True).select_related('profile')[:10]
     suggested = []
+    suggested_posts_data = []
     for u in suggested_users:
         try:
             pf = u.profile
         except ObjectDoesNotExist:
             Profile.objects.get_or_create(user=u)
             pf = u.profile
+        avatar = pf.profile_picture.url if pf.profile_picture else None
         suggested.append({
             'username': u.username,
             'handle': f'@{u.username}',
             'bio': pf.bio[:80] if pf.bio else '',
-            'avatar': pf.profile_picture.url if pf.profile_picture else None,
+            'avatar': avatar,
         })
+        u_posts = u.posts.select_related('video', 'image').all().order_by('-created_at')[:3]
+        for p in u_posts:
+            suggested_posts_data.append({
+                'id': p.id,
+                'user': u.username,
+                'user_avatar': avatar,
+                'likes': p.like_set.count(),
+                'comments': p.comment_set.count(),
+                'video_url': p.video.file.url if p.video else None,
+                'image_url': p.image.file.url if p.image else None,
+                'has_video': bool(p.video),
+            })
     return render(request, 'user/friends.html', {
         'posts_json': json.dumps(posts_data),
-        'activity_json': json.dumps(activity_data),
         'suggested': suggested,
+        'suggested_posts_json': json.dumps(suggested_posts_data),
     })
 
 def user_profile(request, username):
