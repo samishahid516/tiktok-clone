@@ -85,8 +85,8 @@
                     <input type="file" name="media" accept="video/*,image/*" class="hidden" x-ref="fileInput" @change="selectedFile = $event.target.files[0]">
 
                     <div x-show="!selectedFile" class="mb-6">
-                        <div @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false" @drop.prevent="dragging = false; $refs.fileInput.files = $event.dataTransfer.files; selectedFile = $event.dataTransfer.files[0]" :class="dragging ? 'border-rose-500 bg-rose-50 dark:bg-rose-500/10' : 'border-neutral-300 dark:border-neutral-600'" class="border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer hover:border-rose-400 dark:hover:border-rose-400">
-                            <div class="max-w-xs mx-auto">
+                        <div @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false" @drop.prevent="dragging = false; selectedFile = $event.dataTransfer.files[0]" :class="dragging ? 'border-rose-500 bg-rose-50 dark:bg-rose-500/10' : 'border-neutral-300 dark:border-neutral-600'" class="border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer hover:border-rose-400 dark:hover:border-rose-400 flex flex-col items-center justify-center" style="height: 350px !important;">
+                            <div>
                                 <svg class="w-10 h-10 mx-auto mb-3 text-neutral-400 dark:text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
                                 <p class="text-base font-semibold dark:text-white mb-1">Upload Video or Image</p>
                                 <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-3">or drag and drop</p>
@@ -100,8 +100,8 @@
                             <div class="flex items-center gap-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-4">
                                 <svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium dark:text-white truncate" x-text="selectedFile.name"></p>
-                                    <p class="text-xs text-neutral-500" x-text="(selectedFile.size / (1024*1024)).toFixed(2) + ' MB'"></p>
+                                    <p class="text-sm font-medium dark:text-white truncate" x-text="selectedFile?.name"></p>
+                                    <p class="text-xs text-neutral-500" x-text="selectedFile ? (selectedFile.size / (1024*1024)).toFixed(2) + ' MB' : ''"></p>
                                 </div>
                                 <button type="button" @click="$refs.fileInput.click()" class="flex items-center gap-1.5 text-sm font-semibold text-rose-500 cursor-pointer hover:text-rose-600 shrink-0">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"/></svg>
