@@ -1,0 +1,198 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore - TikTok</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+    <link rel="stylesheet" href="{% static 'src/output.css' %}">
+    <script defer src="{% static 'src/alpine.min.js' %}"></script>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    </style>
+</head>
+<body x-data="explorePage()" class="bg-white dark:bg-black">
+    <form method="post" class="hidden">{% csrf_token %}</form>
+    <script id="posts-data" type="application/json">{{ posts_json|safe }}</script>
+    <script id="users-data" type="application/json">{{ users_json|safe }}</script>
+    <script id="suggestions-data" type="application/json">{{ suggestions_json|safe }}</script>
+    <div class="flex h-screen">
+        {% include "components/sidebar.html" with sidebarCond="showMorePanel" nav_extra_handlers="" nav_exclude="" %}
+        {% include "components/more_panel.html" %}
+        {% include "components/toast.html" %}
+
+        <main class="flex-1 overflow-y-auto hide-scrollbar bg-white dark:bg-black">
+            <div class="max-w-6xl mx-auto px-4 py-6">
+                <div class="mb-6 relative">
+                    <form method="GET" action="{% url 'explore' %}" class="relative max-w-xl" @submit="showSuggestions = false">
+                        <input type="search" name="q" placeholder="Search videos, users, hashtags..." value="{{ current_query }}" x-model="searchQuery" @input="showSuggestions = searchQuery.trim().length > 0" @focus="showSuggestions = searchQuery.trim().length > 0 && filteredSuggestions.length > 0" @blur="setTimeout(() => showSuggestions = false, 200)" @keydown.escape="showSuggestions = false" class="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-full py-2.5 pl-4 pr-11 text-sm focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-400 dark:text-white dark:placeholder-neutral-400">
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 pointer-events-none" fill="currentColor" viewBox="0 0 48 48"><path d="M21.83 7.5a14.34 14.34 0 1 1 0 28.68 14.34 14.34 0 0 1 0-28.68Zm0-4a18.33 18.33 0 1 0 11.48 32.64l8.9 8.9a1 1 0 0 0 1.42 0l1.4-1.41a1 1 0 0 0 0-1.42l-8.89-8.9A18.34 18.34 0 0 0 21.83 3.5Z"/></svg>
+                    </form>
+                    <div x-show="showSuggestions && filteredSuggestions.length > 0" class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg z-20 max-h-80 overflow-y-auto max-w-xl">
+                        <template x-for="s in filteredSuggestions" :key="s.label">
+                            <a :href="s.type === 'user' || s.type === 'friend' ? '{% url "user_profile" "PLACEHOLDER" %}'.replace('PLACEHOLDER', s.label) : '?hashtag=' + s.label.replace('#', '')" class="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                                <template x-if="s.type === 'user' || s.type === 'friend'">
+                                    <div class="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xs font-bold shrink-0 text-neutral-500 dark:text-neutral-400 overflow-hidden">
+                                        <img x-show="s.avatar" :src="s.avatar" class="w-full h-full object-cover">
+                                        <span x-show="!s.avatar" x-text="s.label.charAt(0).toUpperCase()"></span>
+                                    </div>
+                                </template>
+                                <template x-if="s.type === 'hashtag'">
+                                    <div class="w-8 h-8 rounded-full bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center shrink-0">
+                                        <svg class="w-4 h-4 text-rose-400" fill="currentColor" viewBox="0 0 24 24"><path d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5"/></svg>
+                                    </div>
+                                </template>
+                                <template x-if="s.type === 'video'">
+                                    <div class="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shrink-0">
+                                        <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 24 24"><path d="M10 8v8l5-4-5-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
+                                    </div>
+                                </template>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium dark:text-white truncate" x-text="s.label"></p>
+                                    <p class="text-xs" :class="s.type === 'friend' ? 'text-green-500' : 'text-neutral-400'" x-text="s.type === 'friend' ? 'Friend' : s.type === 'user' ? 'User' : s.type === 'hashtag' ? 'Hashtag' : 'Video'"></p>
+                                </div>
+                                <span class="text-xs text-rose-500 font-medium shrink-0" x-text="s.type === 'user' || s.type === 'friend' ? 'Visit' : 'Browse'"></span>
+                            </a>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <a href="{% url 'explore' %}" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {% if not current_hashtag and not current_query %}bg-rose-500 text-white{% else %}bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700{% endif %}">All</a>
+                    {% for tag in trending_hashtags %}
+                    <a href="{% url 'explore' %}?hashtag={{ tag|cut:'#' }}" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {% if current_hashtag == tag|cut:'#' %}bg-rose-500 text-white{% else %}bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700{% endif %}">{{ tag }}</a>
+                    {% endfor %}
+                </div>
+
+                <template x-if="users.length > 0">
+                    <div class="mb-8">
+                        <h2 class="text-base font-semibold dark:text-white mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            Users
+                        </h2>
+                        <div class="space-y-1">
+                            <template x-for="u in users" :key="u.username">
+                                <a :href="'{% url "user_profile" "PLACEHOLDER" %}'.replace('PLACEHOLDER', u.username)" class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition-colors">
+                                    <div class="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden flex items-center justify-center text-base font-bold text-neutral-500 dark:text-neutral-400 shrink-0">
+                                        <img x-show="u.avatar" :src="u.avatar" class="w-full h-full object-cover">
+                                        <span x-show="!u.avatar" x-text="u.username.charAt(0).toUpperCase()"></span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold dark:text-white truncate" x-text="u.username"></p>
+                                        <p class="text-xs text-neutral-400" x-text="'@' + u.username"></p>
+                                    </div>
+                                    <svg class="w-4 h-4 text-neutral-300 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="posts.length > 0">
+                    <div>
+                        <h2 x-show="currentQuery || currentHashtag" class="text-base font-semibold dark:text-white mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M10 8v8l5-4-5-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
+                            Videos
+                        </h2>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                            <template x-for="post in posts" :key="post.id">
+                                <a :href="'/post/' + post.id + '/'" class="relative bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden cursor-pointer group aspect-[9/16]">
+                                    <template x-if="post.has_video && post.video_url">
+                                        <video :src="post.video_url" class="absolute inset-0 w-full h-full object-cover" loop muted playsinline @mouseenter="$el.play()" @mouseleave="$el.pause(); $el.currentTime = 0"></video>
+                                    </template>
+                                    <template x-if="!post.has_video && post.image_url">
+                                        <img :src="post.image_url" class="absolute inset-0 w-full h-full object-cover">
+                                    </template>
+                                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                                    <div class="absolute bottom-2 left-2 right-2 flex items-center gap-3 text-white text-xs z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span class="flex items-center gap-1 bg-black/50 px-2 py-0.5 rounded">
+                                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                            <span x-text="post.likes"></span>
+                                        </span>
+                                        <span class="flex items-center gap-1 bg-black/50 px-2 py-0.5 rounded">
+                                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-2.25a6.75 6.75 0 1 1 0-13.5 6.75 6.75 0 0 1 0 13.5ZM12 6a.75.75 0 0 1 .75.75v5.25h3.75a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75v-6A.75.75 0 0 1 12 6Z"/></svg>
+                                            <span x-text="post.comments"></span>
+                                        </span>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="!posts.length && !users.length">
+                    <div class="text-center py-20">
+                        <svg class="w-20 h-20 text-neutral-300 dark:text-neutral-600 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                        <p class="text-lg font-semibold dark:text-white">No results found</p>
+                        <p class="text-sm text-neutral-400 mt-1">Try searching for something else.</p>
+                    </div>
+                </template>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function explorePage() {
+            var posts = [];
+            var users = [];
+            var suggestions = [];
+            try { posts = JSON.parse(document.getElementById('posts-data').textContent || '[]') } catch(e) { console.error(e) }
+            try { users = JSON.parse(document.getElementById('users-data').textContent || '[]') } catch(e) { console.error(e) }
+            try { suggestions = JSON.parse(document.getElementById('suggestions-data').textContent || '[]') } catch(e) { console.error(e) }
+            var isAuth = {{ user.is_authenticated|lower }};
+            var currentQuery = '{{ current_query|escapejs }}';
+            var currentHashtag = '{{ current_hashtag|escapejs }}';
+            var menuItems = [
+                { id: 'for-you', label: 'For You', auth: false, icon: 'M24.9505 7.84001C24.3975 7.38666 23.6014 7.38666 23.0485 7.84003L6.94846 21.04C6.45839 21.4418 6.2737 22.1083 6.48706 22.705C6.70041 23.3017 7.26576 23.7 7.89949 23.7H10.2311L11.4232 36.7278C11.5409 38.0149 12.6203 39 13.9128 39H21.5C22.0523 39 22.5 38.5523 22.5 38V28.3153C22.5 27.763 22.9477 27.3153 23.5 27.3153H24.5C25.0523 27.3153 25.5 27.763 25.5 28.3153V38C25.5 38.5523 25.9477 39 26.5 39H34.0874C35.3798 39 36.4592 38.0149 36.577 36.7278L37.7691 23.7H40.1001C40.7338 23.7 41.2992 23.3017 41.5125 22.705C41.7259 22.1082 41.5412 21.4418 41.0511 21.04L24.9505 7.84001Z' },
+                { id: 'explore', label: 'Explore', auth: false, icon: 'M24 37.4a13.4 13.4 0 1 0 0-26.8 13.4 13.4 0 0 0 0 26.8ZM40.5 24a16.5 16.5 0 1 1-33 0 16.5 16.5 0 0 1 33 0ZM27.13 27.18 19 32.1a.6.6 0 0 1-.9-.63l1.84-9.33a2 2 0 0 1 .92-1.32L29 15.9a.6.6 0 0 1 .9.63l-1.84 9.33a2 2 0 0 1-.93 1.32Zm-5.04-.45 3.11-1.89.7-3.57-3.1 1.89-.7 3.57Z' },
+                { id: 'following', label: 'Following', auth: false, icon: 'M18.99 3a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 4a6 6 0 1 0 0 12A6 6 0 0 0 19 7ZM18.99 26c2.96 0 5.6.58 7.87 1.65l-3.07 3.06a15.38 15.38 0 0 0-4.8-.71C10.9 30 6.3 35.16 6 43c-.02.55-.46 1-1.02 1h-2c-.55 0-1-.45-.98-1C2.33 32.99 8.7 26 19 26ZM35.7 41.88 31.82 38H45a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H31.82l3.88-3.88a1 1 0 0 0 0-1.41l-1.41-1.42a1 1 0 0 0-1.42 0l-7.3 7.3a2 2 0 0 0 0 2.82l7.3 7.3a1 1 0 0 0 1.42 0l1.41-1.42a1 1 0 0 0 0-1.41Z' },
+                { id: 'friends', label: 'Friends', auth: true, icon: 'M34 21a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm-4 4c-4.42 0-8 3.58-8 8v4h24v-4c0-4.42-3.58-8-8-8h-8ZM14 21a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-2 4c-3.31 0-6 2.69-6 6v3h12v-3c0-3.31-2.69-6-6-6h0Z' },
+                { id: 'messages', label: 'Messages', auth: true, icon: 'M24 4C12.95 4 4 11.63 4 21c0 3.76 1.43 7.2 3.83 10.07L4 44l13.73-4.58A22.2 22.2 0 0 0 24 40c11.05 0 20-7.63 20-17S35.05 4 24 4Z' },
+                { id: 'activity', label: 'Activity', auth: true, icon: 'M44 24c0 11.05-8.95 20-20 20S4 35.05 4 24 12.95 4 24 4s20 8.95 20 20Zm-18-8a2 2 0 1 0-4 0v10a2 2 0 0 0 1.05 1.77l8 4.44a2 2 0 1 0 1.9-3.52L26 24.7V16Z' },
+                { id: 'upload', label: 'Upload', auth: false, icon: 'M25 15a1 1 0 0 1 1 1v6h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-6v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-6h-6a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h6v-6a1 1 0 0 1 1-1h2Z' },
+                { id: 'live', label: 'LIVE', auth: false, icon: 'M9 8a4 4 0 0 0-4 4v24a4 4 0 0 0 4 4h30a4 4 0 0 0 4-4V12a4 4 0 0 0-4-4H9ZM18 16.5a.5.5 0 0 1 .75-.43l14 9a.5.5 0 0 1 0 .86l-14 9a.5.5 0 0 1-.75-.43v-18Z' },
+                { id: 'profile', label: 'Profile', auth: false, icon: 'M24.0003 7C20.1343 7 17.0003 10.134 17.0003 14C17.0003 17.866 20.1343 21 24.0003 21C27.8663 21 31.0003 17.866 31.0003 14C31.0003 10.134 27.8663 7 24.0003 7ZM13.0003 14C13.0003 7.92487 17.9252 3 24.0003 3C30.0755 3 35.0003 7.92487 35.0003 14C35.0003 20.0751 30.0755 25 24.0003 25C17.9252 25 13.0003 20.0751 13.0003 14ZM24.0003 33C18.0615 33 13.0493 36.9841 11.4972 42.4262C11.3457 42.9573 10.8217 43.3088 10.2804 43.1989L8.32038 42.8011C7.77914 42.6912 7.4266 42.1618 7.5683 41.628C9.49821 34.358 16.1215 29 24.0003 29C31.8792 29 38.5025 34.358 40.4324 41.628C40.5741 42.1618 40.2215 42.6912 39.6803 42.8011L37.7203 43.1989C37.179 43.3088 36.6549 42.9573 36.5035 42.4262C34.9514 36.9841 29.9391 33 24.0003 33Z' },
+                { id: 'more', label: 'More', auth: false, icon: 'M5 24a4 4 0 1 1 8 0 4 4 0 0 1-8 0Zm15 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0Zm15 0a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z' },
+            ];
+            var visibleItems = menuItems.filter(function(i) { return !i.auth || isAuth });
+            return {
+                posts: posts,
+                users: users,
+                suggestions: suggestions,
+                currentQuery: currentQuery,
+                currentHashtag: currentHashtag,
+                searchQuery: currentQuery || '',
+                showSuggestions: false,
+                activeNav: 'explore',
+                showMorePanel: false,
+                showThemeOptions: false,
+                showLoginModal: false,
+                showToast: false,
+                toastMessage: '',
+                darkMode: localStorage.getItem('darkMode') === 'true',
+                isAuthenticated: isAuth,
+                menuItems: menuItems,
+                visibleItems: visibleItems,
+                get filteredSuggestions() {
+                    var q = (this.searchQuery || '').toLowerCase().trim();
+                    if (!q) return [];
+                    var sug = this.suggestions;
+                    sug = sug.filter(function(s) { return s.label.toLowerCase().indexOf(q) > -1 });
+                    return sug.slice(0, 8);
+                },
+                init() {
+                    if (this.darkMode) document.documentElement.classList.add('dark')
+                },
+                toggleTheme(targetDark) {
+                    this.darkMode = targetDark
+                    document.documentElement.classList.toggle('dark', targetDark)
+                    localStorage.setItem('darkMode', targetDark)
+                },
+            }
+        }
+    </script>
+</body>
+</html>

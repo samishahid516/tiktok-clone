@@ -10,6 +10,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from django.http import JsonResponse
+from django.db.models import Q
 from .models import EmailVerification, Profile, Activity
 from post.models import Post, Like, Bookmark
 
@@ -238,6 +239,137 @@ def following_page(request):
         'suggested_json': json.dumps(suggested),
         'following_count': len(following_list),
         'following_list': following_list,
+        'suggested': suggested,
+    })
+
+def explore(request):
+    query = request.GET.get('q', '')
+    hashtag = request.GET.get('hashtag', '')
+    posts = Post.objects.select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').all().order_by('-created_at')
+    users = User.objects.none()
+    if query:
+        posts = posts.filter(Q(caption__icontains=query) | Q(hashtags__icontains=query))
+        users = User.objects.filter(is_superuser=False, username__icontains=query).exclude(id=request.user.id if request.user.is_authenticated else None)
+    if hashtag:
+        posts = posts.filter(hashtags__icontains=hashtag)
+    posts_data = []
+    for post in posts:
+        liked = False
+        bookmarked = False
+        if request.user.is_authenticated:
+            liked = post.like_set.filter(user=request.user).exists()
+            bookmarked = post.bookmark_set.filter(user=request.user).exists()
+        posts_data.append({
+            'id': post.id,
+            'user': post.user.username,
+            'likes': post.like_set.count(),
+            'comments': post.comment_set.count(),
+            'liked': liked,
+            'bookmarked': bookmarked,
+            'video_url': post.video.file.url if post.video else None,
+            'image_url': post.image.file.url if post.image else None,
+            'has_video': bool(post.video),
+        })
+    users_data = []
+    for u in users:
+        try:
+            pf = u.profile
+        except ObjectDoesNotExist:
+            Profile.objects.get_or_create(user=u)
+            pf = u.profile
+        users_data.append({
+            'username': u.username,
+            'avatar': pf.profile_picture.url if pf.profile_picture else None,
+        })
+    all_hashtags = set()
+    for p in Post.objects.exclude(hashtags='').values_list('hashtags', flat=True):
+        for tag in p.split():
+            if tag.startswith('#'):
+                all_hashtags.add(tag)
+    trending_hashtags = sorted(all_hashtags)[:10]
+    followed_ids = set()
+    if request.user.is_authenticated:
+        followed_ids = set(request.user.following.values_list('user_id', flat=True))
+    suggestion_users = User.objects.filter(is_superuser=False).select_related('profile')[:20]
+    suggestion_data = []
+    for u in suggestion_users:
+        if u.id in followed_ids:
+            stype = 'friend'
+        else:
+            stype = 'user'
+        try:
+            pf = u.profile
+        except ObjectDoesNotExist:
+            Profile.objects.get_or_create(user=u)
+            pf = u.profile
+        suggestion_data.append({
+            'type': stype,
+            'label': u.username,
+            'avatar': pf.profile_picture.url if pf.profile_picture else None,
+        })
+    for tag in trending_hashtags[:8]:
+        suggestion_data.append({
+            'type': 'hashtag',
+            'label': tag,
+            'avatar': None,
+        })
+    return render(request, 'user/explore.html', {
+        'posts_json': json.dumps(posts_data),
+        'users_json': json.dumps(users_data),
+        'suggestions_json': json.dumps(suggestion_data),
+        'trending_hashtags': trending_hashtags,
+        'current_query': query,
+        'current_hashtag': hashtag,
+    })
+
+@login_required(login_url='index')
+def friends(request):
+    followed_ids = request.user.following.values_list('user_id', flat=True)
+    friends_posts = Post.objects.filter(user_id__in=followed_ids).select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').order_by('-created_at')
+    friends_activity = Activity.objects.filter(user_id__in=followed_ids).select_related('actor', 'post').order_by('-created_at')[:30]
+    posts_data = []
+    for post in friends_posts:
+        liked = post.like_set.filter(user=request.user).exists()
+        bookmarked = post.bookmark_set.filter(user=request.user).exists()
+        posts_data.append({
+            'id': post.id,
+            'user': post.user.username,
+            'desc': post.caption,
+            'likes': post.like_set.count(),
+            'comments': post.comment_set.count(),
+            'liked': liked,
+            'bookmarked': bookmarked,
+            'video_url': post.video.file.url if post.video else None,
+            'image_url': post.image.file.url if post.image else None,
+            'has_video': bool(post.video),
+        })
+    activity_data = []
+    for a in friends_activity:
+        activity_data.append({
+            'id': a.id,
+            'actor': a.actor.username,
+            'type': a.activity_type,
+            'text': a.text,
+            'time': a.created_at.isoformat(),
+            'post_id': a.post_id,
+        })
+    suggested_users = User.objects.exclude(id__in=followed_ids).exclude(id=request.user.id).exclude(is_superuser=True).select_related('profile')[:10]
+    suggested = []
+    for u in suggested_users:
+        try:
+            pf = u.profile
+        except ObjectDoesNotExist:
+            Profile.objects.get_or_create(user=u)
+            pf = u.profile
+        suggested.append({
+            'username': u.username,
+            'handle': f'@{u.username}',
+            'bio': pf.bio[:80] if pf.bio else '',
+            'avatar': pf.profile_picture.url if pf.profile_picture else None,
+        })
+    return render(request, 'user/friends.html', {
+        'posts_json': json.dumps(posts_data),
+        'activity_json': json.dumps(activity_data),
         'suggested': suggested,
     })
 

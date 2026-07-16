@@ -10,4 +10,6 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('following/', views.following_page, name='following'),
     path('follow/<str:username>/', views.follow_user, name='follow_user'),
+    path('explore/', views.explore, name='explore'),
+    path('friends/', views.friends, name='friends'),
 ]

@@ -43,14 +43,14 @@
                 <div class="space-y-1" x-show="followingList.length > 0" style="display:none">
                     <template x-for="(user, i) in followingList" :key="i">
                         <div class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition-colors">
-                            <a :href="'/@' + user.username" target="_blank" class="shrink-0">
+                            <a :href="'{% url "user_profile" "PLACEHOLDER" %}'.replace('PLACEHOLDER', user.username)" target="_blank" class="shrink-0">
                                 <div class="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden flex items-center justify-center text-base font-bold text-neutral-500 dark:text-neutral-400">
                                     <img x-show="user.avatar" :src="user.avatar" class="w-full h-full object-cover">
                                     <span x-show="!user.avatar" x-text="user.username.charAt(0).toUpperCase()"></span>
                                 </div>
                             </a>
                             <div class="flex-1 min-w-0">
-                                <a :href="'/@' + user.username" target="_blank" class="text-sm font-semibold dark:text-white hover:underline truncate block" x-text="user.username"></a>
+                                <a :href="'{% url "user_profile" "PLACEHOLDER" %}'.replace('PLACEHOLDER', user.username)" target="_blank" class="text-sm font-semibold dark:text-white hover:underline truncate block" x-text="user.username"></a>
                                 <p class="text-xs text-neutral-400 truncate" x-text="user.handle"></p>
                                 <p x-show="user.bio" class="text-xs text-neutral-500 mt-0.5 line-clamp-1" x-text="user.bio"></p>
                             </div>
@@ -64,7 +64,7 @@
                 <div class="space-y-1">
                     {% for user in suggested %}
                     <div class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition-colors" x-data="{ following: false }" x-init="suggestedList[{{ forloop.counter0 }}] ? (following = suggestedList[{{ forloop.counter0 }}].following) : null">
-                        <a href="/@{{ user.username }}" target="_blank" class="shrink-0">
+                        <a href="{% url 'user_profile' user.username %}" target="_blank" class="shrink-0">
                             <div class="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden flex items-center justify-center text-base font-bold text-neutral-500 dark:text-neutral-400">
                                 {% if user.avatar %}
                                 <img src="{{ user.avatar }}" class="w-full h-full object-cover">
@@ -74,7 +74,7 @@
                             </div>
                         </a>
                         <div class="flex-1 min-w-0">
-                            <a href="/@{{ user.username }}" target="_blank" class="text-sm font-semibold dark:text-white hover:underline truncate block">{{ user.username }}</a>
+                            <a href="{% url 'user_profile' user.username %}" target="_blank" class="text-sm font-semibold dark:text-white hover:underline truncate block">{{ user.username }}</a>
                             <p class="text-xs text-neutral-400 truncate">@{{ user.username }}</p>
                             {% if user.bio %}
                             <p class="text-xs text-neutral-500 mt-0.5 line-clamp-1">{{ user.bio }}</p>
