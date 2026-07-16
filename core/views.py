@@ -27,7 +27,7 @@ def index(request):
     return render(request, 'user/index.html')
 
 def home(request):
-    posts = Post.objects.select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').all().order_by('-created_at')
+    posts = Post.objects.select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').all().order_by('?')
 
     posts_data = []
     for post in posts:
@@ -245,7 +245,7 @@ def following_page(request):
 def explore(request):
     query = request.GET.get('q', '')
     hashtag = request.GET.get('hashtag', '')
-    posts = Post.objects.select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').all().order_by('-created_at')
+    posts = Post.objects.select_related('video', 'image').prefetch_related('like_set', 'comment_set', 'user').all().order_by('?')
     users = User.objects.none()
     if query:
         posts = posts.filter(Q(caption__icontains=query) | Q(hashtags__icontains=query))
