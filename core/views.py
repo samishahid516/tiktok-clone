@@ -373,6 +373,25 @@ def friends(request):
         'suggested': suggested,
     })
 
+def user_profile(request, username):
+    profile_user = get_object_or_404(User, username=username, is_superuser=False)
+    profile_obj, _ = Profile.objects.get_or_create(user=profile_user)
+    posts = profile_user.posts.select_related('video', 'image').prefetch_related('like_set', 'comment_set').all().order_by('-created_at')
+    is_following = False
+    if request.user.is_authenticated:
+        is_following = profile_obj.followers.filter(id=request.user.id).exists()
+    return render(request, 'user/public_profile.html', {
+        'profile_user': profile_user,
+        'profile_picture': profile_obj.profile_picture.url if profile_obj.profile_picture else None,
+        'bio': profile_obj.bio,
+        'name': profile_user.first_name,
+        'posts': posts,
+        'following_count': profile_user.following.count(),
+        'followers_count': profile_obj.followers.count(),
+        'is_following': is_following,
+        'total_likes': sum(p.like_set.count() for p in posts),
+    })
+
 def logout_view(request):
     logout(request)
     return redirect('index')
