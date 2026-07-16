@@ -59,6 +59,7 @@ def comment_created(sender, instance, created, **kwargs):
                 actor=instance.user,
                 activity_type=Activity.COMMENT,
                 post=instance.post,
+                comment=instance,
                 text=f"{instance.user.username} commented: {instance.text[:50]}",
             )
         mentions = re.findall(r'@(\w+)', instance.text)

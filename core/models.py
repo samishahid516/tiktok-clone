@@ -41,6 +41,7 @@ class Activity(models.Model):
     actor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities_actor')
     activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES)
     post = models.ForeignKey('post.Post', on_delete=models.SET_NULL, null=True, blank=True)
+    comment = models.ForeignKey('post.Comment', on_delete=models.SET_NULL, null=True, blank=True)
     text = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -147,13 +147,13 @@
                 </div>
                 <div class="flex-1 overflow-y-auto hide-scrollbar p-2 space-y-1">
                     <template x-for="a in activities" :key="a.id">
-                        <a :href="a.post_id ? '/post/' + a.post_id + '/' : '#'" class="flex items-start gap-3 px-3 py-2.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors">
+                        <div @click="openActivity(a)" class="flex items-start gap-3 px-3 py-2.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer">
                             <div class="w-10 h-10 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-sm font-bold shrink-0 dark:text-white" x-text="a.actor.charAt(0).toUpperCase()"></div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm dark:text-white" x-text="a.text"></p>
                                 <p class="text-xs text-neutral-400 mt-0.5" x-text="new Date(a.time).toLocaleDateString()"></p>
                             </div>
-                        </a>
+                        </div>
                     </template>
                     <template x-if="activities.length === 0">
                         <div class="flex flex-col items-center justify-center h-full text-center py-16 px-4">
@@ -189,7 +189,7 @@
                 <div class="flex flex-col h-full">
                     <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
                         <h2 class="font-semibold text-base dark:text-white">Messages</h2>
-                        <button @click="showMessages = false; conversations = []; selectedConversation = null" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors dark:text-white">
+                        <button @click="showMessages = false; conversations = []; selectedConversation = null; conversationMessages = []" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors dark:text-white">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                     </div>
@@ -202,7 +202,7 @@
                             </div>
                         </template>
                         <template x-for="c in conversations" :key="c.user_id">
-                            <button @click="selectedConversation = c" class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors text-left">
+                            <button @click="openConversation(c)" class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors text-left">
                                 <div class="w-10 h-10 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-sm font-bold shrink-0 dark:text-white" x-text="c.username.charAt(0).toUpperCase()"></div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between">
@@ -219,7 +219,7 @@
             <template x-if="selectedConversation">
                 <div class="flex flex-col h-full">
                     <div class="flex items-center gap-3 px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
-                        <button @click="selectedConversation = null" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors dark:text-white">
+                        <button @click="selectedConversation = null; conversationMessages = []" class="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors dark:text-white">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5m7 7l-7-7 7-7"/></svg>
                         </button>
                         <div class="flex items-center gap-2">
@@ -230,22 +230,33 @@
                         </div>
                     </div>
                     <div class="flex-1 overflow-y-auto hide-scrollbar px-4 py-3 space-y-3">
-                        <div class="flex gap-2 items-start max-w-[80%]">
-                            <div class="w-7 h-7 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-[10px] font-bold shrink-0 dark:text-white" x-text="selectedConversation.username.charAt(0).toUpperCase()"></div>
-                            <div class="bg-neutral-100 dark:bg-neutral-800 rounded-2xl rounded-tl-none px-3 py-2">
-                                <p class="text-sm dark:text-white" x-text="selectedConversation.text"></p>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-[10px] text-neutral-400" x-text="new Date(selectedConversation.time).toLocaleString()"></span>
-                                    <button @click="likeConversation(selectedConversation)" class="text-neutral-400 hover:text-red-500 transition-colors">
-                                        <svg class="w-3.5 h-3.5" :class="selectedConversation.liked ? 'fill-red-500 text-red-500' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
-                                    </button>
+                        <template x-for="(msg, idx) in conversationMessages" :key="msg.id">
+                            <div :class="msg.is_mine ? 'justify-end' : 'justify-start'" class="flex gap-2">
+                                <template x-if="!msg.is_mine">
+                                    <div class="w-7 h-7 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-[10px] font-bold shrink-0 dark:text-white" x-text="msg.username.charAt(0).toUpperCase()"></div>
+                                </template>
+                                <div :class="msg.is_mine ? 'bg-rose-500 text-white rounded-2xl rounded-br-none' : 'bg-neutral-100 dark:bg-neutral-800 rounded-2xl rounded-tl-none'" class="max-w-[80%] px-3 py-2">
+                                    <p class="text-sm" :class="msg.is_mine ? 'text-white' : 'dark:text-white'" x-text="msg.text"></p>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="text-[10px] opacity-70" x-text="new Date(msg.time).toLocaleString()"></span>
+                                        <template x-if="!msg.is_mine">
+                                            <button @click="likeConversationMessage(msg)" class="opacity-70 hover:text-red-500 transition-colors">
+                                                <svg class="w-3.5 h-3.5" :class="msg.liked ? 'fill-red-500 text-red-500' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                            </button>
+                                        </template>
+                                        <template x-if="msg.is_mine">
+                                            <button @click="deleteMessage(msg, idx)" class="opacity-70">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </template>
                     </div>
                     <div class="border-t border-neutral-200 dark:border-neutral-700 px-4 py-3">
                         <form @submit.prevent="sendReply(selectedConversation)" class="flex items-center gap-2">
-                            <input type="text" x-model="replyText" placeholder="Reply to " class="flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-full px-4 py-2 text-sm dark:text-white focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors">
+                            <input type="text" x-model="replyText" :placeholder="'Reply to @' + selectedConversation.username" class="flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-full px-4 py-2 text-sm dark:text-white focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors">
                             <button type="submit" class="p-2 text-rose-500 hover:text-rose-600 transition-colors disabled:opacity-40" :disabled="!replyText.trim()">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3.4 20.4L21.85 12 3.4 3.6v6.6l13.2 1.8L3.4 13.8v6.6z"/></svg>
                             </button>
@@ -472,6 +483,7 @@
                 activities: [],
                 conversations: [],
                 selectedConversation: null,
+                conversationMessages: [],
                 replyText: '',
                 showComments: false,
                 showCommentInput: false,
@@ -479,6 +491,7 @@
                 comments: [],
                 darkMode: localStorage.getItem('darkMode') === 'true',
                 isAuthenticated: {{ user.is_authenticated|lower }},
+                currentUsername: '{{ user.username }}',
                 csrfToken: '{{ csrf_token }}',
                 videos: JSON.parse(document.getElementById('posts-data').textContent),
                 menuItems: [
@@ -573,24 +586,102 @@
                         .then(r => r.json())
                         .then(d => { this.activities = d.activities })
                 },
+                openActivity(a) {
+                    if (a.type === 'comment' && a.post_id) {
+                        var idx = this.videos.findIndex(function(v) { return v.id === a.post_id })
+                        if (idx !== -1) {
+                            this.currentIndex = idx
+                            this.openComments(idx)
+                        }
+                    } else if (a.post_id) {
+                        window.location.href = '/post/' + a.post_id + '/'
+                    }
+                },
+                openConversation(conv) {
+                    this.selectedConversation = conv
+                    this.conversationMessages = [{
+                        id: conv.comment_id,
+                        username: conv.username,
+                        text: conv.text,
+                        time: conv.time,
+                        liked: conv.liked,
+                        is_mine: false
+                    }]
+                    fetch('/post/' + conv.post_id + '/comment/')
+                        .then(r => r.json())
+                        .then(function(d) {
+                            var msgs = this.conversationMessages.slice()
+                            d.comments.forEach(function(c) {
+                                if (c.id === conv.comment_id) return
+                                if (c.username === this.currentUsername || c.username === conv.username) {
+                                    msgs.push({
+                                        id: c.id,
+                                        username: c.username,
+                                        text: c.text,
+                                        time: c.created_at,
+                                        liked: c.liked,
+                                        likes: c.likes,
+                                        is_mine: c.username === this.currentUsername
+                                    })
+                                }
+                                c.replies.forEach(function(r) {
+                                    if (r.username === this.currentUsername || r.username === conv.username) {
+                                        msgs.push({
+                                            id: r.id,
+                                            username: r.username,
+                                            text: r.text,
+                                            time: r.created_at,
+                                            liked: r.liked,
+                                            likes: r.likes,
+                                            is_mine: r.username === this.currentUsername
+                                        })
+                                    }
+                                }.bind(this))
+                            }.bind(this))
+                            msgs.sort(function(a, b) { return new Date(a.time) - new Date(b.time) })
+                            this.conversationMessages = msgs
+                        }.bind(this))
+                },
                 sendReply(conv) {
                     if (!this.replyText.trim() || !this.isAuthenticated) return
                     var text = this.replyText
                     fetch('/post/' + conv.post_id + '/comment/', { method: 'POST', headers: { 'X-CSRFToken': this.csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'text=' + encodeURIComponent(text) })
                         .then(r => r.json())
-                        .then(d => {
+                        .then(function(d) {
                             if (d.success) {
                                 this.replyText = ''
-                                this.toast('Reply sent')
+                                this.conversationMessages.push({
+                                    id: d.id,
+                                    username: this.currentUsername,
+                                    text: text,
+                                    time: d.created_at,
+                                    liked: false,
+                                    likes: 0,
+                                    is_mine: true
+                                })
                                 this.fetchConversations()
                             }
-                        })
+                        }.bind(this))
                 },
-                likeConversation(conv) {
-                    if (!this.isAuthenticated) { this.showLoginModal = true; return }
-                    fetch('/post/comment/' + conv.comment_id + '/like/', { method: 'POST', headers: { 'X-CSRFToken': this.csrfToken } })
+                deleteMessage(msg, idx) {
+                    if (!this.isAuthenticated) return
+                    fetch('/post/comment/' + msg.id + '/delete/', { method: 'POST', headers: { 'X-CSRFToken': this.csrfToken } })
                         .then(r => r.json())
-                        .then(d => { conv.liked = d.liked })
+                        .then(function(d) {
+                            if (d.success) {
+                                this.conversationMessages.splice(idx, 1)
+                                this.fetchConversations()
+                            }
+                        }.bind(this))
+                },
+                likeConversationMessage(msg) {
+                    if (!this.isAuthenticated) return
+                    fetch('/post/comment/' + msg.id + '/like/', { method: 'POST', headers: { 'X-CSRFToken': this.csrfToken } })
+                        .then(r => r.json())
+                        .then(function(d) {
+                            msg.liked = d.liked
+                            msg.likes = d.total_likes
+                        })
                 },
                 toggleCommentLike(c) {
                     if (!this.isAuthenticated) { this.showLoginModal = true; return }

@@ -255,8 +255,10 @@ def activities(request):
             'id': a.id,
             'type': a.activity_type,
             'actor': a.actor.username,
+            'actor_id': a.actor.id,
             'text': a.text,
             'post_id': a.post.id if a.post else None,
+            'comment_id': a.comment.id if a.comment else None,
             'time': a.created_at.isoformat(),
         })
     return JsonResponse({'activities': data})
