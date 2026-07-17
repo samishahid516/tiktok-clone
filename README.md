@@ -1,6 +1,4 @@
-<<<<<<< HEAD
 
-=======
 <div align="center">
 
 # TikTok Clone (Python)
