@@ -118,45 +118,81 @@ Whether you're learning Django or looking for a social media starter project, th
 
 ### Landing & Authentication
 
-| Page | Preview |
-|------|---------|
-| **Landing Page** | <a href="screenshots/landing_page.png" target="_blank"><img src="screenshots/landing_page.png" width="300"></a> |
-| **Landing Page (Initial)** | <a href="screenshots/landing_page_intial.png" target="_blank"><img src="screenshots/landing_page_intial.png" width="300"></a> |
-| **Login** | <a href="screenshots/login.png" target="_blank"><img src="screenshots/login.png" width="300"></a> |
-| **Signup** | <a href="screenshots/signup.png" target="_blank"><img src="screenshots/signup.png" width="300"></a> |
-| **Email Verification** | <a href="screenshots/email_verification.png" target="_blank"><img src="screenshots/email_verification.png" width="300"></a> |
-| **Gmail Verification Code** | <a href="screenshots/gmail_code.png" target="_blank"><img src="screenshots/gmail_code.png" width="300"></a> |
+**Landing Page**
+
+<a href="screenshots/landing_page.png" target="_blank"><img src="screenshots/landing_page.png" width="250" alt="Landing Page"></a>
+
+**Landing Page (Initial)**
+
+<a href="screenshots/landing_page_intial.png" target="_blank"><img src="screenshots/landing_page_intial.png" width="250" alt="Landing Page Initial"></a>
+
+**Login**
+
+<a href="screenshots/login.png" target="_blank"><img src="screenshots/login.png" width="250" alt="Login"></a>
+
+**Signup**
+
+<a href="screenshots/signup.png" target="_blank"><img src="screenshots/signup.png" width="250" alt="Signup"></a>
+
+**Email Verification**
+
+<a href="screenshots/email_verification.png" target="_blank"><img src="screenshots/email_verification.png" width="250" alt="Email Verification"></a>
+
+**Gmail Verification Code**
+
+<a href="screenshots/gmail_code.png" target="_blank"><img src="screenshots/gmail_code.png" width="250" alt="Gmail Code"></a>
 
 ### Core Features
 
-| Page | Preview |
-|------|---------|
-| **Home Feed** | <a href="screenshots/home.png" target="_blank"><img src="screenshots/home.png" width="300"></a> |
-| **Explore** | <a href="screenshots/explore.png" target="_blank"><img src="screenshots/explore.png" width="300"></a> |
-| **Profile** | <a href="screenshots/profile.png" target="_blank"><img src="screenshots/profile.png" width="300"></a> |
-| **Edit Profile** | <a href="screenshots/edit_profile.png" target="_blank"><img src="screenshots/edit_profile.png" width="300"></a> |
-| **Following** | <a href="screenshots/following.png" target="_blank"><img src="screenshots/following.png" width="300"></a> |
+**Home Feed**
+
+<a href="screenshots/home.png" target="_blank"><img src="screenshots/home.png" width="250" alt="Home Feed"></a>
+
+**Explore**
+
+<a href="screenshots/explore.png" target="_blank"><img src="screenshots/explore.png" width="250" alt="Explore"></a>
+
+**Profile**
+
+<a href="screenshots/profile.png" target="_blank"><img src="screenshots/profile.png" width="250" alt="Profile"></a>
+
+**Edit Profile**
+
+<a href="screenshots/edit_profile.png" target="_blank"><img src="screenshots/edit_profile.png" width="250" alt="Edit Profile"></a>
+
+**Following**
+
+<a href="screenshots/following.png" target="_blank"><img src="screenshots/following.png" width="250" alt="Following"></a>
 
 ### Posts & Interactions
 
-| Page | Preview |
-|------|---------|
-| **Upload Post** | <a href="screenshots/upload.png" target="_blank"><img src="screenshots/upload.png" width="300"></a> |
-| **Post Details** | <a href="screenshots/post_details.png" target="_blank"><img src="screenshots/post_details.png" width="300"></a> |
+**Upload Post**
+
+<a href="screenshots/upload.png" target="_blank"><img src="screenshots/upload.png" width="250" alt="Upload Post"></a>
+
+**Post Details**
+
+<a href="screenshots/post_details.png" target="_blank"><img src="screenshots/post_details.png" width="250" alt="Post Details"></a>
 
 ### Social & Communication
 
-| Page | Preview |
-|------|---------|
-| **Messages** | <a href="screenshots/messages.png" target="_blank"><img src="screenshots/messages.png" width="300"></a> |
-| **Conversations** | <a href="screenshots/conservation.png" target="_blank"><img src="screenshots/conservation.png" width="300"></a> |
-| **Activities** | <a href="screenshots/activities.png" target="_blank"><img src="screenshots/activities.png" width="300"></a> |
+**Messages**
+
+<a href="screenshots/messages.png" target="_blank"><img src="screenshots/messages.png" width="250" alt="Messages"></a>
+
+**Conversations**
+
+<a href="screenshots/conservation.png" target="_blank"><img src="screenshots/conservation.png" width="250" alt="Conversations"></a>
+
+**Activities**
+
+<a href="screenshots/activities.png" target="_blank"><img src="screenshots/activities.png" width="250" alt="Activities"></a>
 
 ### Theme
 
-| Page | Preview |
-|------|---------|
-| **Dark Mode** | <a href="screenshots/Dark_mode.png" target="_blank"><img src="screenshots/Dark_mode.png" width="300"></a> |
+**Dark Mode**
+
+<a href="screenshots/Dark_mode.png" target="_blank"><img src="screenshots/Dark_mode.png" width="250" alt="Dark Mode"></a>
 
 ---
 
