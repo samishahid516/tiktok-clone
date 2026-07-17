@@ -1,134 +1,131 @@
-# TikTok Clone — Model Restructuring
+# TikTok Clone
 
-## Post is now the main class
+A full-featured TikTok clone built with Django, featuring vertical video feed, user authentication with email verification, social interactions, and a responsive dark-mode UI.
 
-Every media and interaction type links **through** `Post`, not the other way around. Post holds direct ForeignKeys to Video/Image/Soundtrack and ManyToManyFields (through Like/Comment) for interactions.
+## Tech Stack
 
----
+| Frontend | Backend | Database |
+|---|---|---|
+| Tailwind CSS v4 | Django 6.0 / Python 3 | SQLite |
+| Alpine.js | Django Templates (SSR) | |
 
-## What changed in `post/models.py`
+## Features
 
-### Video — `post` FK removed
+- **TikTok-style video feed** — vertical scrolling with keyboard/wheel navigation
+- **Authentication** — signup/login with email verification (6-digit code via SMTP)
+- **User profiles** — avatar, bio, stats, edit modal, public profiles
+- **Post creation** — upload videos/images with caption, hashtags, mentions, location, scheduling, privacy, soundtrack
+- **Social interactions** — like, comment (nested replies), bookmark, share, follow/unfollow
+- **Friends system** — mutual follows feed + suggested users
+- **Activity feed** — notifications for likes, comments, mentions, follows
+- **Conversations** — comment-based messaging between users
+- **Explore page** — search videos/users/hashtags with live suggestions
+- **Dark mode** — persisted toggle
+- **Responsive sidebar** — collapsible navigation
 
-```diff
-- post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='videos')
+## Pages & Screenshots
+
+### Landing Page
+Landing/splash page with login/signup promotion.
+![Landing Page](screenshots/landing.png)
+
+### Login
+Login form with email/username and password.
+![Login](screenshots/login.png)
+
+### Signup
+Registration with email verification (6-digit code with resend timer).
+![Signup](screenshots/signup.png)
+
+### Home Feed
+Main TikTok-style vertical video feed with like/comment/bookmark/share actions, comments panel, activity panel, and sidebar navigation.
+![Home Feed](screenshots/home.png)
+
+### Explore
+Search page with trending hashtag filters, user results, video grid, and live suggestions dropdown.
+![Explore](screenshots/explore.png)
+
+### Profile
+Own profile page with avatar, stats, edit modal, and tabs for Videos / Favorites / Liked posts.
+![Profile](screenshots/profile.png)
+
+### Public Profile
+Other user's profile with follow button, stats, and post grid.
+![Public Profile](screenshots/public_profile.png)
+
+### Following
+List of followed users and suggested accounts.
+![Following](screenshots/following.png)
+
+### Friends
+Friends' posts grid with suggested users and their content.
+![Friends](screenshots/friends.png)
+
+### Post Detail
+Single post view with full video, likes, comments with threaded replies, edit/delete modals, and likers panel.
+![Post Detail](screenshots/post_detail.png)
+
+### Upload
+Post creation form with drag-and-drop, caption, hashtags, mentions, location, scheduling, privacy, and soundtrack selection.
+![Upload](screenshots/upload.png)
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/tiktok-clone.git
+cd tiktok-clone
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Install Node dependencies (for Tailwind CSS)
+npm install
+
+# Build Tailwind CSS
+npm run tw:build
+
+# Run migrations
+python manage.py migrate
+
+# Create a superuser
+python manage.py createsuperuser
+
+# Start the development server
+python manage.py runserver
 ```
 
-Video no longer points to Post. Now **Post has the FK** → `post.video` (added below).
+## Usage
 
-### Image — `post` FK removed
+1. Visit `http://127.0.0.1:8000/` — you'll be greeted by the landing page
+2. Sign up or log in to access the full app
+3. Upload videos/images from the upload page
+4. Scroll through the home feed, interact with posts, follow users, and explore content
 
-```diff
-- post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='images')
-```
+## Configuration
 
-Now **Post has the FK** → `post.image`.
-
-### Soundtrack — `post` FK removed
-
-```diff
-- post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='soundtracks')
-```
-
-Now **Post has the FK** → `post.soundtrack`.
-
-### Like — `post` FK kept, `related_name` changed + M2M added on Post
-
-```diff
-- post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
-+ post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like_set')
-```
-
-The `post` FK still exists on Like (it's the through model). But now **Post also has**: `likes = ManyToManyField(User, through=Like)` so you can access users who liked directly via `post.likes.all()`.
-
-### Comment — `post` FK kept, `related_name` changed + M2M added on Post
-
-```diff
-- post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
-+ post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment_set')
-```
-
-Same as Like — `post` FK stays on Comment, and **Post also has**: `comments = ManyToManyField(User, through=Comment)`.
-
-### Bookmark — `post` FK kept, `related_name` changed + M2M added on Post
-
-```diff
-- post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='bookmarks')
-+ post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='bookmark_set')
-```
-
-Bookmark's `post` FK stays. **Post now also has**: `bookmarks = ManyToManyField(User, through=Bookmark)` so you can access users who bookmarked directly via `post.bookmarks.all()`.
-
-### CommentLike — unchanged
-
-CommentLike still has `comment = ForeignKey(Comment)` and `user = ForeignKey(User)` — no direct `post` FK. No changes.
-
-### Post — all new fields added
-
-```diff
-+ video = models.ForeignKey(Video, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts')
-+ image = models.ForeignKey(Image, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts')
-+ soundtrack = models.ForeignKey(Soundtrack, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts')
-+ likes = models.ManyToManyField(User, through=Like, related_name='liked_posts', blank=True)
-+ comments = models.ManyToManyField(User, through=Comment, related_name='commented_posts', blank=True)
-+ bookmarks = models.ManyToManyField(User, through=Bookmark, related_name='bookmarked_posts', blank=True)
-+ hashtags = models.CharField(max_length=200, blank=True)
-+ updated_at = models.DateTimeField(auto_now=True)
-```
-
-Post now **owns** all relationships — media as direct FKs, interactions as M2M through models.
-
-### Post — `__str__` unchanged
+Email verification requires SMTP settings in `tiktok/settings.py`. Configure your email backend:
 
 ```python
-def __str__(self):
-    return f"{self.user.username}'s post - {self.created_at}"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@gmail.com'
+EMAIL_HOST_PASSWORD = 'your-app-password'
 ```
 
-### Which models have `created_at` / `updated_at`
+## Management Commands
 
-| Model | `created_at` | `updated_at` |
-|-------|:-----------:|:-----------:|
-| Post | ✅ | ✅ (`auto_now`) |
-| Video | ✅ | ❌ |
-| Image | ✅ | ❌ |
-| Soundtrack | ✅ | ❌ |
-| Like | ✅ | ❌ |
-| Comment | ✅ | ❌ |
-| Bookmark | ✅ | ❌ |
-| CommentLike | ✅ | ❌ |
+```bash
+# Load soundtracks into the database
+python manage.py load_soundtracks
+```
 
-Only `Post` has `updated_at` — it uses `auto_now=True` so it updates automatically every time the post is saved.
+## License
 
----
-
-## Old vs New Access Patterns
-
-| What you want | Old code | New code |
-|---------------|----------|----------|
-| Post's video | `post.videos.first()` | `post.video` |
-| Post's image | `post.images.first()` | `post.image` |
-| Post's soundtrack | `post.soundtracks.first()` | `post.soundtrack` |
-| Post's soundtrack title | `post.soundtracks.first().title` | `post.soundtrack.title` |
-| Like objects | `post.likes.filter(...)` | `post.like_set.filter(...)` |
-| Comment objects | `post.comments.filter(...)` | `post.comment_set.filter(...)` |
-| Bookmark objects | `post.bookmarks.filter(...)` | `post.bookmark_set.filter(...)` |
-| Users who liked | *(not available)* | `post.likes.all()` (M2M) |
-| Users who commented | *(not available)* | `post.comments.all()` (M2M) |
-| Users who bookmarked | *(not available)* | `post.bookmarks.all()` (M2M) |
-| Like count | `post.likes.count()` | `post.like_set.count()` |
-| Comment count | `post.comments.count()` | `post.comment_set.count()` |
-| Post created date | `post.created_at` | `post.created_at` (unchanged) |
-| Post last updated | *(did not exist)* | `post.updated_at` |
-
----
-
-## Why
-
-1. **Single media per post** — a post has one video/image/soundtrack. The FK on Post enforces this at the model level instead of relying on `.first()` everywhere.
-
-2. **Simpler queries** — `post.video` instead of `post.videos.first()` — no queryset overhead.
-
-3. **Faster joins** — `select_related('video', 'image', 'soundtrack')` uses a single SQL JOIN instead of separate `prefetch_related` queries.
-
-4. **M2M convenience** — `post.likes.all()` gives User objects directly; `post.like_set` gives full Like records when needed.
+[MIT](LICENSE)
