@@ -116,25 +116,47 @@ Whether you're learning Django or looking for a social media starter project, th
 
 ## Screenshots
 
-> **Note:** Add your own screenshots to the `screenshots/` folder and they will appear below.  
-> Recommended: capture each page at 1920×1080 or 1280×720.
+### Landing & Authentication
 
 | Page | Preview |
-|---|---|
-| **Landing Page** — Login/signup splash screen | `screenshots/landing.png` |
-| **Login** — Email/username and password form | `screenshots/login.png` |
-| **Signup** — Registration with email verification | `screenshots/signup.png` |
-| **Home Feed** — Vertical video feed with interactions | `screenshots/home.png` |
-| **Explore** — Search with hashtags and live suggestions | `screenshots/explore.png` |
-| **Profile** — Own profile with stats and tabs | `screenshots/profile.png` |
-| **Public Profile** — Other user's profile with follow button | `screenshots/public_profile.png` |
-| **Following** — Followed users and suggestions | `screenshots/following.png` |
-| **Friends** — Mutual follows' posts | `screenshots/friends.png` |
-| **Post Detail** — Full post view with comments | `screenshots/post_detail.png` |
-| **Upload** — Create post with drag-and-drop | `screenshots/upload.png` |
-| **Activity Feed** — Notifications panel | `screenshots/activities.png` |
-| **Conversations** — Messaging panel | `screenshots/conversations.png` |
-| **Dark Mode** — Same pages in dark theme | `screenshots/dark_mode.png` |
+|------|---------|
+| **Landing Page** | <a href="screenshots/landing_page.png" target="_blank"><img src="screenshots/landing_page.png" width="300"></a> |
+| **Landing Page (Initial)** | <a href="screenshots/landing_page_intial.png" target="_blank"><img src="screenshots/landing_page_intial.png" width="300"></a> |
+| **Login** | <a href="screenshots/login.png" target="_blank"><img src="screenshots/login.png" width="300"></a> |
+| **Signup** | <a href="screenshots/signup.png" target="_blank"><img src="screenshots/signup.png" width="300"></a> |
+| **Email Verification** | <a href="screenshots/email_verification.png" target="_blank"><img src="screenshots/email_verification.png" width="300"></a> |
+| **Gmail Verification Code** | <a href="screenshots/gmail_code.png" target="_blank"><img src="screenshots/gmail_code.png" width="300"></a> |
+
+### Core Features
+
+| Page | Preview |
+|------|---------|
+| **Home Feed** | <a href="screenshots/home.png" target="_blank"><img src="screenshots/home.png" width="300"></a> |
+| **Explore** | <a href="screenshots/explore.png" target="_blank"><img src="screenshots/explore.png" width="300"></a> |
+| **Profile** | <a href="screenshots/profile.png" target="_blank"><img src="screenshots/profile.png" width="300"></a> |
+| **Edit Profile** | <a href="screenshots/edit_profile.png" target="_blank"><img src="screenshots/edit_profile.png" width="300"></a> |
+| **Following** | <a href="screenshots/following.png" target="_blank"><img src="screenshots/following.png" width="300"></a> |
+
+### Posts & Interactions
+
+| Page | Preview |
+|------|---------|
+| **Upload Post** | <a href="screenshots/upload.png" target="_blank"><img src="screenshots/upload.png" width="300"></a> |
+| **Post Details** | <a href="screenshots/post_details.png" target="_blank"><img src="screenshots/post_details.png" width="300"></a> |
+
+### Social & Communication
+
+| Page | Preview |
+|------|---------|
+| **Messages** | <a href="screenshots/messages.png" target="_blank"><img src="screenshots/messages.png" width="300"></a> |
+| **Conversations** | <a href="screenshots/conservation.png" target="_blank"><img src="screenshots/conservation.png" width="300"></a> |
+| **Activities** | <a href="screenshots/activities.png" target="_blank"><img src="screenshots/activities.png" width="300"></a> |
+
+### Theme
+
+| Page | Preview |
+|------|---------|
+| **Dark Mode** | <a href="screenshots/Dark_mode.png" target="_blank"><img src="screenshots/Dark_mode.png" width="300"></a> |
 
 ---
 

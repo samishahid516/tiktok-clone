@@ -220,14 +220,14 @@
 
                         <div class="lg:col-span-2">
                             <div class="sticky top-6">
-                                <div class="aspect-[9/16] max-h-[500px] bg-black rounded-xl flex items-center justify-center overflow-hidden">
+                                <div class="aspect-[9/16] max-h-[500px] bg-black rounded-xl overflow-hidden">
                                     <template x-if="isVideoFile()">
-                                        <video class="w-full h-full object-contain" controls style="width:400px;height:400px">
+                                        <video class="w-full h-full object-cover" controls>
                                             <source :src="URL.createObjectURL(selectedFile)">
                                         </video>
                                     </template>
                                     <template x-if="isImageFile()">
-                                        <img :src="URL.createObjectURL(selectedFile)" class="w-full h-full object-contain" style="width:400px;height:400px">
+                                        <img :src="URL.createObjectURL(selectedFile)" class="w-full h-full object-cover">
                                     </template>
                                 </div>
                                 <div class="relative flex items-center justify-center gap-6 mt-4">
